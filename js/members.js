@@ -8,15 +8,14 @@ function showToast(message) {
   const toast = document.getElementById("toast");
   toast.innerText = message;
   toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2000);
+  setTimeout(() => toast.classList.remove("show"), 2000);
 }
-
 
 /* =========================
    렌더
+========================= */
+/* =========================
+   렌더 (수정본)
 ========================= */
 export async function renderMembers() {
   document.getElementById("page-title").innerText = "멤버 리스트";
@@ -24,42 +23,49 @@ export async function renderMembers() {
   document.getElementById("page-content").innerHTML = `
     <div class="card">
       <div class="table-wrapper">
-        <table class="wide-table">
+        <table class="member-table">
           <thead>
             <tr class="input-row">
-              <th></th>
-              <th><input id="i-nickname" placeholder="닉네임"></th>
-              <th><input id="i-birth" placeholder="년생"></th>
-              <th>
+              <th class="col-action"></th> <th class="col-no"></th>     <th class="col-nickname"><input id="i-nickname" placeholder="닉네임"></th>
+              <th class="col-birth"><input id="i-birth" placeholder="년생"></th>
+              <th class="col-gender">
                 <select id="i-gender">
                   <option value="">성별</option>
                   <option value="남">남</option>
                   <option value="여">여</option>
                 </select>
               </th>
-              <th><input id="i-region" placeholder="지역"></th>
-              <th><input type="checkbox" id="i-doc"></th>
-              <th><input id="i-realname" placeholder="본명"></th>
-              <th><input id="i-status" placeholder="상태"></th>
-              <th><input type="checkbox" id="i-black"></th>
-              <th><input type="checkbox" id="i-admin"></th>
-              <th><input id="i-memo" placeholder="비고"></th>
-              <th><button id="add-btn">등록</button></th>
+              <th class="col-region"><input id="i-region" placeholder="지역"></th>
+              <th class="col-chk"><input type="checkbox" id="i-doc"></th>
+              <th class="col-realname"><input id="i-realname" placeholder="본명"></th>
+              <th class="col-status">
+                <select id="i-status">
+                  <option>활동</option>
+                  <option>외출</option>
+                  <option>강퇴</option>
+                </select>
+              </th>
+              <th class="col-chk"><input type="checkbox" id="i-black"></th>
+              <th class="col-chk"><input type="checkbox" id="i-admin"></th>
+              <th class="col-memo"><input id="i-memo" placeholder="비고"></th>
+              <th class="col-action">
+                <button id="add-btn">등록</button>
+              </th>
             </tr>
-            <tr>
-              <th></th>
-              ${header("No")}
-              ${header("닉네임", "nickname")}
-              ${header("나이", "birth_year")}
-              ${header("성별", "gender")}
-              ${header("지역", "region")}
-              ${header("서류")}
-              ${header("본명")}
-              ${header("상태", "status")}
-              ${header("블랙")}
-              ${header("운영진")}
-              <th>비고</th>
-              <th>삭제</th>
+            <tr class="header-row">
+              <th class="col-action"></th>
+              <th class="col-no">No</th>
+              <th class="col-nickname sortable" data-key="nickname">닉네임</th>
+              <th class="col-birth sortable" data-key="birth_year">나이</th>
+              <th class="col-gender">성별</th>
+              <th class="col-region sortable" data-key="region">지역</th>
+              <th class="col-chk">서류</th>
+              <th class="col-realname">본명</th>
+              <th class="col-status sortable" data-key="status">상태</th>
+              <th class="col-chk">블랙</th>
+              <th class="col-chk">운영진</th>
+              <th class="col-memo">비고</th>
+              <th class="col-action">삭제</th>
             </tr>
           </thead>
           <tbody id="member-body"></tbody>
@@ -94,38 +100,35 @@ async function loadMembers() {
 }
 
 /* =========================
-   테이블
+   테이블 렌더
 ========================= */
 function renderTable(list) {
   const body = document.getElementById("member-body");
-
   body.innerHTML = list.map((m, i) => `
     <tr data-id="${m.id}">
-      <td>
+      <td class="col-action">
         <button class="edit-btn" onclick="editMember(${m.id})">✏️</button>
       </td>
-      <td>${i + 1}</td>
-
-      <td class="editable" data-field="nickname">${m.nickname}</td>
-      <td>${m.birth_year}</td>
-      <td>${m.gender}</td>
-
-      <td class="editable" data-field="region">${m.region || ""}</td>
-      <td>${m.doc_confirm ? "✔" : ""}</td>
-      <td>${m.real_name || ""}</td>
-
-      <td class="editable" data-field="status">${m.status}</td>
-      <td class="editable" data-field="black">${m.black ? "✔" : ""}</td>
-      <td class="editable" data-field="admin">${m.admin ? "✔" : ""}</td>
-      <td class="editable" data-field="memo">${m.memo || ""}</td>
-
-      <td>
+      <td class="col-no">${i + 1}</td>
+      <td class="col-nickname editable" data-field="nickname">${m.nickname}</td>
+      <td class="col-birth">${m.birth_year}</td>
+      <td class="col-gender">${m.gender}</td>
+      <td class="col-region editable" data-field="region">${m.region || ""}</td>
+      <td class="col-chk center">${m.doc_confirm ? "✔" : ""}</td>
+      <td class="col-realname">${m.real_name || ""}</td>
+      <td class="col-status editable" data-field="status">${m.status}</td>
+      <td class="col-chk editable center" data-field="black">${m.black ? "✔" : ""}</td>
+      <td class="col-chk editable center" data-field="admin">${m.admin ? "✔" : ""}</td>
+      <td class="col-memo editable" data-field="memo">${m.memo || ""}</td>
+      <td class="col-action">
         <button class="del-btn" onclick="deleteMember(${m.id})">🗑</button>
       </td>
     </tr>
   `).join("");
 }
-
+/* =========================
+   정렬
+========================= */
 function sortBy(key) {
   sortState.asc = sortState.key === key ? !sortState.asc : true;
   sortState.key = key;
@@ -140,7 +143,7 @@ function sortBy(key) {
 }
 
 /* =========================
-   ✏️ 수정 모드
+   ✏️ 수정
 ========================= */
 window.editMember = (id) => {
   if (editingId && editingId !== id) {
@@ -201,6 +204,7 @@ async function saveMember(id) {
     body: JSON.stringify(data)
   });
   hideLoading();
+
   showToast("저장되었습니다 ✅");
   editingId = null;
   await loadMembers();

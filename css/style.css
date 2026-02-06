@@ -53,32 +53,98 @@ body {
 }
 
 .card {
+  max-width: 1600px; /* 모니터가 아무리 커도 이 이상 안 커지게 */
+  margin: 0 auto;    /* 중앙 정렬 */
   background: #fff;
   border-radius: 14px;
-  padding: 16px;
+  padding: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 
 /* Table */
+/* ===================================================
+   [공통] 모든 테이블에 적용되는 마스터 스타일
+=================================================== */
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* 칸 정렬을 위해 필수 */
+  background: #fff;
 }
 
+/* 모든 헤더: 무조건 가운데 정렬 */
 th {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6e6e73;
-  padding: 10px 6px;
-}
-
-td {
+  text-align: center !important;
+  background-color: #f1f3f5;
+  color: #495057;
   font-size: 13px;
-  padding: 10px 6px;
-  border-top: 1px solid #f0f0f0;
+  padding: 12px 8px;
+  border-bottom: 2px solid #e9ecef;
 }
 
+/* 모든 데이터 셀: 기본 가운데 정렬 */
+td {
+  text-align: center;
+  padding: 10px 8px;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+/* 줄 구분: 짝수행 파스텔톤 */
+tbody tr:nth-child(even) {
+  background-color: #f8faff;
+}
+
+/* 마우스 호버 효과 */
+tbody tr:hover {
+  background-color: #f2f6ff;
+}
+
+/* 입력창 & 셀렉트박스 공통 스타일 */
+.input-row input, 
+.input-row select {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.input-row input:focus {
+  border-color: #007aff;
+  outline: none;
+}
+
+/* 수정 중인 행 강조 */
+tr.editing {
+  background-color: #fff9db !important;
+}
+
+/* ===================================================
+   [특화] 멤버 테이블 전용 너비 및 예외 정렬
+=================================================== */
+.member-table .col-action { width: 60px; }
+.member-table .col-no     { width: 50px; }
+.member-table .col-birth  { width: 70px; }
+.member-table .col-gender { width: 80px; }
+.member-table .col-chk    { width: 60px; }
+.member-table .col-status { width: 100px; }
+.member-table .col-memo   { width: auto; }
+
+/* '비고'만 데이터 왼쪽 정렬 */
+tbody td.col-memo, 
+tbody td.col-memo input {
+  text-align: left !important;
+  padding-left: 20px !important;
+}
+
+/*비고의 해더부분은 가운데 정렬*/
+thead th.col-memo {
+  text-align: center !important;
+}
 
 /* ===== typeahead suggestion ===== */
 
@@ -155,7 +221,7 @@ select {
 input:focus,
 select:focus {
   outline: none;
-  border-color: #007aff;
+  border-color: #81beff;
   background: #fff;
 }
 
@@ -163,7 +229,7 @@ button {
   padding: 6px 10px;
   border-radius: 10px;
   border: none;
-  background: #007aff;
+  background: #9ec1e6;
   color: white;
   font-size: 13px;
   cursor: pointer;
@@ -201,3 +267,29 @@ tr.editing td {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* 비고 입력창은 왼쪽 정렬 */
+#i-memo {
+  text-align: left !important;
+}
+
+thead th {
+  text-align: center !important;
+  background-color: #f1f3f5; /* 헤더 배경에 살짝 톤을 주면 더 고급스러워요 */
+  color: #495057;
+  font-weight: 700;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+/* 체크박스 가운데 정렬 */
+.center, .col-chk {
+  text-align: center;
+}
+
+.col-chk input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
