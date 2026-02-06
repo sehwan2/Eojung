@@ -33,7 +33,7 @@ export async function renderExtensions() {
               <th>지역</th>
               <th>입장 날짜</th>
               <th>연장 일수</th>
-              <th>상태</th>
+              <th>사유</th>
               <th>삭제</th>
             </tr>
           </thead>
