@@ -293,3 +293,29 @@ thead th {
   cursor: pointer;
 }
 
+
+/* 상단 바 레이아웃 */
+.top-bar {
+  display: flex;
+  justify-content: space-between; /* 제목은 왼쪽, 만든이는 오른쪽 */
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 5px; /* 약간의 여백 */
+}
+
+/* 만든 이 전체 스타일 */
+.made-by {
+  font-size: 13px;
+  color: #8e8e93; /* 세련된 그레이 톤 */
+  font-weight: 400;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.03); /* 아주 연한 배경 (선택사항) */
+  border-radius: 20px;
+}
+
+/* 이름 강조 */
+.author-name {
+  font-weight: 600;
+  color: #007aff; /* 포인트 컬러인 블루 적용 */
+  margin-left: 4px;
+}
