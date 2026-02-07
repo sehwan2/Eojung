@@ -16,7 +16,7 @@ export async function renderAbsences() {
             <th><input id="abs-birth" disabled /></th>
             <th><input id="abs-gender" disabled /></th>
             <th><input id="abs-region" disabled /></th>
-            <th><input id="abs-datetime" type="datetime-local" /></th>
+            <th><input id="abs-datetime" type="date" /></th>
             <th><input id="abs-host" placeholder="벙주" /></th>
             <th>
               <select id="abs-notice">
@@ -36,7 +36,7 @@ export async function renderAbsences() {
             <th>나이</th>
             <th>성별</th>
             <th>지역</th>
-            <th>벙 일시</th>
+            <th>벙 날짜</th>
             <th>벙주</th>
             <th>취소통보</th>
             <th>삭제</th>
@@ -50,8 +50,21 @@ export async function renderAbsences() {
   /* ===============================
      데이터 로딩
   ============================== */
-  const members = await fetch("/.netlify/functions/getMembers").then(r => r.json());
-  const absences = await fetch("/.netlify/functions/getAbsences").then(r => r.json());
+  let members = [];
+  let absences = [];
+  try {
+    const [membersRes, absencesRes] = await Promise.all([
+      fetch("/.netlify/functions/getMembers"),
+      fetch("/.netlify/functions/getAbsences")
+    ]);
+    if (!membersRes.ok || !absencesRes.ok) throw new Error("데이터를 불러오지 못했습니다.");
+    members = await membersRes.json();
+    absences = await absencesRes.json();
+  } catch (e) {
+    alert(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 
   let selectedMember = null;
 
@@ -98,30 +111,36 @@ export async function renderAbsences() {
   body.innerHTML = absences.map((a, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${a.nickname}</td>
-      <td>${a.birth_year}</td>
-      <td>${a.gender}</td>
-      <td>${a.region}</td>
-      <td>${formatDateTime(a.event_datetime)}</td>
-      <td>${a.host || ""}</td>
-      <td>${a.notice_time || ""}</td>
+      <td>${escapeHtml(a.nickname)}</td>
+      <td>${escapeHtml(a.birth_year)}</td>
+      <td>${escapeHtml(a.gender)}</td>
+      <td>${escapeHtml(a.region)}</td>
+      <td>${formatDate(a.event_datetime)}</td>
+      <td>${escapeHtml(a.host || "")}</td>
+      <td>${escapeHtml(a.notice_time || "")}</td>
       <td>
-        <button onclick="deleteAbsence(${a.id})">🗑</button>
+        <button onclick="deleteAbsence(${a.id})" aria-label="삭제">🗑</button>
       </td>
     </tr>
   `).join("");
-
-  hideLoading();
 
   /* ===============================
      삭제
   ============================== */
   window.deleteAbsence = async (id) => {
-    await fetch("/.netlify/functions/deleteAbsence", {
-      method: "POST",
-      body: JSON.stringify({ id })
-    });
-    renderAbsences();
+    showLoading();
+    try {
+      const res = await fetch("/.netlify/functions/deleteAbsence", {
+        method: "POST",
+        body: JSON.stringify({ id })
+      });
+      if (!res.ok) throw new Error("삭제에 실패했습니다.");
+      await renderAbsences();
+    } catch (e) {
+      alert(e.message || "오류가 발생했습니다.");
+    } finally {
+      hideLoading();
+    }
   };
 
   /* ===============================
@@ -132,26 +151,41 @@ export async function renderAbsences() {
       alert("닉네임을 선택하세요");
       return;
     }
-
-    await fetch("/.netlify/functions/addAbsence", {
-      method: "POST",
-      body: JSON.stringify({
-        member_id: selectedMember.id,
-        event_datetime: document.getElementById("abs-datetime").value,
-        host: document.getElementById("abs-host").value,
-        notice_time: document.getElementById("abs-notice").value
-      })
-    });
-
-    renderAbsences();
+    showLoading();
+    try {
+      const res = await fetch("/.netlify/functions/addAbsence", {
+        method: "POST",
+        body: JSON.stringify({
+          member_id: selectedMember.id,
+          event_datetime: document.getElementById("abs-datetime").value,
+          host: document.getElementById("abs-host").value,
+          notice_time: document.getElementById("abs-notice").value
+        })
+      });
+      if (!res.ok) throw new Error("등록에 실패했습니다.");
+      await renderAbsences();
+    } catch (e) {
+      alert(e.message || "오류가 발생했습니다.");
+    } finally {
+      hideLoading();
+    }
   };
 }
 
 /* ===============================
-   util
+   util – 날짜만 표시 (시간 제외)
 ================================ */
-function formatDateTime(dt) {
+function formatDate(dt) {
   if (!dt) return "";
-  return dt.replace("T", " ").substring(0, 16);
+  return String(dt).substring(0, 10);
+}
+
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 

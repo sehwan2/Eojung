@@ -4,13 +4,26 @@
   <meta charset="UTF-8" />
   <title>모임 관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
 <div class="app">
-  <!-- 사이드 메뉴 -->
-  <nav class="sidebar">
+  <!-- 햄버거 버튼 (항상 보임) -->
+  <button type="button" class="hamburger" id="hamburger" aria-label="메뉴 열기">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- 메뉴 열렸을 때 배경 어둡게 (클릭 시 닫힘) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+  <!-- 사이드 메뉴 (햄버거로 열기/닫기) -->
+  <nav class="sidebar" id="sidebar" aria-label="메인 메뉴">
     <h1>모임</h1>
     <ul>
       <li data-page="members">멤버 리스트</li>
@@ -22,13 +35,13 @@
   <!-- 메인 -->
   <main class="content">
     <header class="top-bar">
-      <h2 id="page-title">페이지 제목</h2>
+      <span class="top-bar-spacer" aria-hidden="true"></span>
+      <h2 id="page-title" class="page-title">페이지 제목</h2>
       <div class="made-by">
         Created by. <span class="author-name">상큼한토마토</span>
       </div>
     </header>
-    <section id="page-title"></section>
-    <section id="page-content"></section>
+    <section id="page-content" class="page-content" aria-live="polite"></section>
   </main>
 </div>
 

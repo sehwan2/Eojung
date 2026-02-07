@@ -54,16 +54,26 @@ export async function renderExtensions() {
 /* ---------- data ---------- */
 
 async function loadMembers() {
-  const res = await fetch("/.netlify/functions/getMembers");
-  members = await res.json();
+  try {
+    const res = await fetch("/.netlify/functions/getMembers");
+    if (res.ok) members = await res.json();
+  } catch (_) {
+    members = [];
+  }
 }
 
 async function loadExtensions() {
   showLoading();
-  const res = await fetch("/.netlify/functions/getExtensions");
-  extensions = await res.json();
-  renderTable();
-  hideLoading();
+  try {
+    const res = await fetch("/.netlify/functions/getExtensions");
+    if (!res.ok) throw new Error("목록을 불러오지 못했습니다.");
+    extensions = await res.json();
+    renderTable();
+  } catch (e) {
+    alert(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 }
 
 /* ---------- render ---------- */
@@ -73,14 +83,14 @@ function renderTable() {
   body.innerHTML = extensions.map((e, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${e.nickname}</td>
-      <td>${e.birth_year}</td>
-      <td>${e.gender}</td>
-      <td>${e.region}</td>
-      <td>${e.enter_date}</td>
+      <td>${escapeHtml(e.nickname)}</td>
+      <td>${escapeHtml(e.birth_year)}</td>
+      <td>${escapeHtml(e.gender)}</td>
+      <td>${escapeHtml(e.region)}</td>
+      <td>${formatDate(e.enter_date)}</td>
       <td>${e.extend_days}</td>
-      <td>${e.status}</td>
-      <td><button onclick="deleteExtension(${e.id})">🗑</button></td>
+      <td>${escapeHtml(e.status)}</td>
+      <td><button onclick="deleteExtension(${e.id})" aria-label="삭제">🗑</button></td>
     </tr>
   `).join("");
 }
@@ -135,26 +145,54 @@ async function addExtension() {
     alert("멤버를 선택하세요");
     return;
   }
-
-  await fetch("/.netlify/functions/addExtension", {
-    method: "POST",
-    body: JSON.stringify({
-      member_id: selectedMember.id,
-      enter_date: v("e-date"),
-      extend_days: v("e-days"),
-      status: v("e-status")
-    })
-  });
-
-  await loadExtensions();
+  showLoading();
+  try {
+    const res = await fetch("/.netlify/functions/addExtension", {
+      method: "POST",
+      body: JSON.stringify({
+        member_id: selectedMember.id,
+        enter_date: v("e-date"),
+        extend_days: v("e-days"),
+        status: v("e-status")
+      })
+    });
+    if (!res.ok) throw new Error("등록에 실패했습니다.");
+    await loadExtensions();
+  } catch (e) {
+    alert(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 }
 
 window.deleteExtension = async (id) => {
-  await fetch("/.netlify/functions/deleteExtension", {
-    method: "POST",
-    body: JSON.stringify({ id })
-  });
-  await loadExtensions();
+  showLoading();
+  try {
+    const res = await fetch("/.netlify/functions/deleteExtension", {
+      method: "POST",
+      body: JSON.stringify({ id })
+    });
+    if (!res.ok) throw new Error("삭제에 실패했습니다.");
+    await loadExtensions();
+  } catch (e) {
+    alert(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 };
 
 const v = id => document.getElementById(id).value;
+
+function formatDate(val) {
+  if (!val) return "";
+  return String(val).substring(0, 10);
+}
+
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}

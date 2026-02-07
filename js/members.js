@@ -55,15 +55,15 @@ export async function renderMembers() {
             <tr class="header-row">
               <th class="col-action"></th>
               <th class="col-no">No</th>
-              <th class="col-nickname sortable" data-key="nickname">닉네임</th>
-              <th class="col-birth sortable" data-key="birth_year">나이</th>
-              <th class="col-gender">성별</th>
-              <th class="col-region sortable" data-key="region">지역</th>
-              <th class="col-chk">서류</th>
+              <th class="col-nickname sortable" data-key="nickname" data-label="닉네임">닉네임</th>
+              <th class="col-birth sortable" data-key="birth_year" data-label="나이">나이</th>
+              <th class="col-gender sortable" data-key="gender" data-label="성별">성별</th>
+              <th class="col-region sortable" data-key="region" data-label="지역">지역</th>
+              <th class="col-chk sortable" data-key="doc_confirm" data-label="서류">서류</th>
               <th class="col-realname">본명</th>
-              <th class="col-status sortable" data-key="status">상태</th>
-              <th class="col-chk">블랙</th>
-              <th class="col-chk">운영진</th>
+              <th class="col-status sortable" data-key="status" data-label="상태">상태</th>
+              <th class="col-chk sortable" data-key="black" data-label="블랙">블랙</th>
+              <th class="col-chk sortable" data-key="admin" data-label="운영진">운영진</th>
               <th class="col-memo">비고</th>
               <th class="col-action">삭제</th>
             </tr>
@@ -88,15 +88,20 @@ function header(label, key) {
 ========================= */
 async function loadMembers() {
   showLoading();
-  const res = await fetch("/.netlify/functions/getMembers");
-  membersCache = await res.json();
-  renderTable(membersCache);
-
-  document.querySelectorAll(".sortable").forEach(th => {
-    th.onclick = () => sortBy(th.dataset.key);
-  });
-
-  hideLoading();
+  try {
+    const res = await fetch("/.netlify/functions/getMembers");
+    if (!res.ok) throw new Error("멤버 목록을 불러오지 못했습니다.");
+    membersCache = await res.json();
+    renderTable(membersCache);
+    document.querySelectorAll(".sortable").forEach(th => {
+      th.onclick = () => sortBy(th.dataset.key);
+    });
+    updateSortIndicators();
+  } catch (e) {
+    showToast(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 }
 
 /* =========================
@@ -107,21 +112,21 @@ function renderTable(list) {
   body.innerHTML = list.map((m, i) => `
     <tr data-id="${m.id}">
       <td class="col-action">
-        <button class="edit-btn" onclick="editMember(${m.id})">✏️</button>
+        <button class="edit-btn" onclick="editMember(${m.id})" aria-label="수정">✏️</button>
       </td>
       <td class="col-no">${i + 1}</td>
-      <td class="col-nickname editable" data-field="nickname">${m.nickname}</td>
-      <td class="col-birth">${m.birth_year}</td>
-      <td class="col-gender">${m.gender}</td>
-      <td class="col-region editable" data-field="region">${m.region || ""}</td>
+      <td class="col-nickname editable" data-field="nickname">${escapeHtml(m.nickname)}</td>
+      <td class="col-birth">${escapeHtml(m.birth_year)}</td>
+      <td class="col-gender">${escapeHtml(m.gender)}</td>
+      <td class="col-region editable" data-field="region">${escapeHtml(m.region || "")}</td>
       <td class="col-chk center">${m.doc_confirm ? "✔" : ""}</td>
-      <td class="col-realname">${m.real_name || ""}</td>
-      <td class="col-status editable" data-field="status">${m.status}</td>
+      <td class="col-realname">${escapeHtml(m.real_name || "")}</td>
+      <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
       <td class="col-chk editable center" data-field="black">${m.black ? "✔" : ""}</td>
       <td class="col-chk editable center" data-field="admin">${m.admin ? "✔" : ""}</td>
-      <td class="col-memo editable" data-field="memo">${m.memo || ""}</td>
+      <td class="col-memo editable" data-field="memo">${escapeHtml(m.memo || "")}</td>
       <td class="col-action">
-        <button class="del-btn" onclick="deleteMember(${m.id})">🗑</button>
+        <button class="del-btn" onclick="deleteMember(${m.id})" aria-label="삭제">🗑</button>
       </td>
     </tr>
   `).join("");
@@ -140,6 +145,19 @@ function sortBy(key) {
   });
 
   renderTable(sorted);
+  updateSortIndicators();
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll(".sortable").forEach(th => {
+    const label = th.dataset.label || th.textContent.trim().replace(/\s*[↑↓]\s*$/, "");
+    const key = th.dataset.key;
+    const arrow =
+      sortState.key === key
+        ? (sortState.asc ? " ↑" : " ↓")
+        : "";
+    th.innerHTML = label + (arrow ? `<span class="sort-arrow">${arrow}</span>` : "");
+  });
 }
 
 /* =========================
@@ -170,7 +188,7 @@ window.editMember = (id) => {
     } else if (field === "black" || field === "admin") {
       td.innerHTML = `<input type="checkbox" ${value === "✔" ? "checked" : ""}>`;
     } else {
-      td.innerHTML = `<input value="${value}">`;
+      td.innerHTML = `<input value="${escapeHtml(value)}">`;
     }
   });
 
@@ -199,15 +217,20 @@ async function saveMember(id) {
   };
 
   showLoading();
-  await fetch("/.netlify/functions/updateMember", {
-    method: "POST",
-    body: JSON.stringify(data)
-  });
-  hideLoading();
-
-  showToast("저장되었습니다 ✅");
-  editingId = null;
-  await loadMembers();
+  try {
+    const res = await fetch("/.netlify/functions/updateMember", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("저장에 실패했습니다.");
+    showToast("저장되었습니다 ✅");
+    editingId = null;
+    await loadMembers();
+  } catch (e) {
+    showToast(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 }
 
 /* =========================
@@ -228,13 +251,19 @@ async function addMember() {
   };
 
   showLoading();
-  await fetch("/.netlify/functions/addMember", {
-    method: "POST",
-    body: JSON.stringify(data)
-  });
-  hideLoading();
-  showToast("저장되었습니다 ✅");
-  await loadMembers();
+  try {
+    const res = await fetch("/.netlify/functions/addMember", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("등록에 실패했습니다.");
+    showToast("저장되었습니다 ✅");
+    await loadMembers();
+  } catch (e) {
+    showToast(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 }
 
 window.deleteMember = async (id) => {
@@ -242,13 +271,18 @@ window.deleteMember = async (id) => {
   if (!ok) return;
 
   showLoading();
-  await fetch("/.netlify/functions/deleteMember", {
-    method: "POST",
-    body: JSON.stringify({ id })
-  });
-  hideLoading();
-
-  await loadMembers();
+  try {
+    const res = await fetch("/.netlify/functions/deleteMember", {
+      method: "POST",
+      body: JSON.stringify({ id })
+    });
+    if (!res.ok) throw new Error("삭제에 실패했습니다.");
+    await loadMembers();
+  } catch (e) {
+    showToast(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
 };
 
 document.addEventListener("keydown", (e) => {
@@ -263,3 +297,14 @@ document.addEventListener("keydown", (e) => {
 
 const val = id => document.getElementById(id).value;
 const chk = id => document.getElementById(id).checked;
+
+/** HTML 이스케이프 (XSS 방지) */
+function escapeHtml(str) {
+  if (str == null) return "";
+  const s = String(str);
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
