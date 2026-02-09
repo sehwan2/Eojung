@@ -1,4 +1,4 @@
-import { showLoading, hideLoading } from "./app.js";
+import { showLoading, hideLoading, getAuthHeaders } from "./app.js";
 let members = [];
 let extensions = [];
 let selectedMember = null;
@@ -149,6 +149,10 @@ async function addExtension() {
   try {
     const res = await fetch("/.netlify/functions/addExtension", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders()
+      },
       body: JSON.stringify({
         member_id: selectedMember.id,
         enter_date: v("e-date"),
@@ -170,6 +174,10 @@ window.deleteExtension = async (id) => {
   try {
     const res = await fetch("/.netlify/functions/deleteExtension", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders()
+      },
       body: JSON.stringify({ id })
     });
     if (!res.ok) throw new Error("삭제에 실패했습니다.");

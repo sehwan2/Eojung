@@ -1,4 +1,4 @@
-import { showLoading, hideLoading } from "./app.js";
+import { showLoading, hideLoading, getAuthHeaders } from "./app.js";
 export async function renderAbsences() {
   showLoading();
   document.getElementById("page-title").innerText = "벙 불참자 관리";
@@ -132,6 +132,10 @@ export async function renderAbsences() {
     try {
       const res = await fetch("/.netlify/functions/deleteAbsence", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({ id })
       });
       if (!res.ok) throw new Error("삭제에 실패했습니다.");
@@ -155,6 +159,10 @@ export async function renderAbsences() {
     try {
       const res = await fetch("/.netlify/functions/addAbsence", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           member_id: selectedMember.id,
           event_datetime: document.getElementById("abs-datetime").value,
@@ -188,4 +196,3 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
-

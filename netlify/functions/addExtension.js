@@ -1,4 +1,5 @@
 import pkg from "pg";
+import { requireApiPassword } from "./utils/auth.js";
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -6,6 +7,8 @@ const pool = new Pool({
 });
 
 export async function handler(event) {
+  const authError = requireApiPassword(event);
+  if (authError) return authError;
   const { member_id, enter_date, extend_days, status } = JSON.parse(event.body);
   const storedEnterDate = normalizeDateToNoon(enter_date);
 

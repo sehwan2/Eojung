@@ -12,18 +12,23 @@ const app = document.querySelector(".app");
 const sidebar = document.getElementById("sidebar");
 const hamburger = document.getElementById("hamburger");
 const overlay = document.getElementById("sidebar-overlay");
+const passwordGate = document.getElementById("password-gate");
+const passwordGateForm = document.getElementById("password-gate-form");
+const passwordGateInput = document.getElementById("password-gate-input");
+const passwordGateFeedback = document.getElementById("password-gate-feedback");
+const passwordGateChange = document.getElementById("password-gate-change");
 
 function openMenu() {
   app.classList.add("menu-open");
   document.body.classList.add("menu-open");
-  hamburger.setAttribute("aria-label", "메뉴 닫기");
+  hamburger.setAttribute("aria-label", "메뉴");
   overlay.setAttribute("aria-hidden", "false");
 }
 
 function closeMenu() {
   app.classList.remove("menu-open");
   document.body.classList.remove("menu-open");
-  hamburger.setAttribute("aria-label", "메뉴 열기");
+  hamburger.setAttribute("aria-label", "메뉴");
   overlay.setAttribute("aria-hidden", "true");
 }
 
@@ -38,6 +43,7 @@ overlay.addEventListener("click", closeMenu);
 const menuItems = document.querySelectorAll(".sidebar li");
 menuItems.forEach(li => {
   li.addEventListener("click", () => {
+    if (!appUnlocked) return;
     menuItems.forEach(l => l.classList.remove("active"));
     li.classList.add("active");
     pages[li.dataset.page]();
@@ -45,7 +51,7 @@ menuItems.forEach(li => {
   });
 });
 
-// 초기 진입 시 '멤버 리스트' 활성 표시
+// 초기 진입
 menuItems[0].classList.add("active");
 
 export function showLoading() {
@@ -56,6 +62,120 @@ export function hideLoading() {
   document.getElementById("loading-mask").classList.add("hidden");
 }
 
+const AUTH_STORAGE_KEY = "backoffice_password";
+let appUnlocked = false;
 
-// 초기 페이지
-renderMembers();
+export function getAuthHeaders() {
+  const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
+  if (!stored) return {};
+  return { "x-api-password": stored };
+}
+
+async function verifyPasswordOnServer(password) {
+  if (!password) return false;
+  try {
+    const res = await fetch("/.netlify/functions/authGate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (passwordGateFeedback) {
+        passwordGateFeedback.textContent = data.message || "비밀번호가 올바르지 않습니다.";
+      }
+      return false;
+    }
+    return true;
+  } catch {
+    if (passwordGateFeedback) {
+      passwordGateFeedback.textContent = "비밀번호가 올바르지 않습니다.";
+    }
+    return false;
+  }
+}
+
+function storePassword(value) {
+  sessionStorage.setItem(AUTH_STORAGE_KEY, value);
+}
+
+function clearStoredPassword() {
+  sessionStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+function showGate(message) {
+  document.body.classList.add("auth-locked");
+  if (passwordGateFeedback) {
+    passwordGateFeedback.textContent = message || "";
+  }
+  if (passwordGate) {
+    passwordGate.classList.add("is-visible");
+  }
+  if (passwordGateInput) {
+    passwordGateInput.value = "";
+    passwordGateInput.focus();
+  }
+}
+
+function hideGate() {
+  if (passwordGate) {
+    passwordGate.classList.remove("is-visible");
+  }
+  document.body.classList.remove("auth-locked");
+  if (passwordGateFeedback) {
+    passwordGateFeedback.textContent = "";
+  }
+}
+
+async function unlockApp(password) {
+  if (appUnlocked) return;
+  if (password) {
+    storePassword(password);
+  }
+  hideGate();
+  renderMembers();
+  appUnlocked = true;
+}
+
+function handleChangePassword() {
+  clearStoredPassword();
+  showGate("비밀번호를 입력해주세요");
+}
+
+passwordGateForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const password = passwordGateInput?.value.trim();
+  if (!password) {
+    if (passwordGateFeedback) {
+      passwordGateFeedback.textContent = "비밀번호를 입력해주세요";
+    }
+    return;
+  }
+  if (passwordGateFeedback) {
+    passwordGateFeedback.textContent = "...";
+  }
+  const valid = await verifyPasswordOnServer(password);
+  if (valid) {
+    unlockApp(password);
+  }
+});
+
+passwordGateChange?.addEventListener("click", () => handleChangePassword());
+
+async function initializeAuthGate() {
+  document.body.classList.add("auth-locked");
+  const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
+  if (stored) {
+    const valid = await verifyPasswordOnServer(stored);
+    if (valid) {
+      unlockApp(stored);
+      return;
+    }
+    clearStoredPassword();
+  }
+  showGate();
+}
+
+initializeAuthGate();
+
+

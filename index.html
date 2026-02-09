@@ -2,38 +2,39 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>모임 관리</title>
+  <title>모돌 백오피스</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
 <div class="app">
-  <!-- 햄버거 버튼 (항상 보임) -->
-  <button type="button" class="hamburger" id="hamburger" aria-label="메뉴 열기">
+  <button
+    type="button"
+    class="hamburger"
+    id="hamburger"
+    aria-label="메뉴 열기"
+  >
     <span></span>
     <span></span>
     <span></span>
   </button>
 
-  <!-- 메뉴 열렸을 때 배경 어둡게 (클릭 시 닫힘) -->
   <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-  <!-- 사이드 메뉴 (햄버거로 열기/닫기) -->
-  <nav class="sidebar" id="sidebar" aria-label="메인 메뉴">
-    <h1>모임</h1>
+  <nav class="sidebar" id="sidebar" aria-label="관리 사이드 메뉴">
+    <h1>모돌</h1>
     <ul>
-      <li data-page="members">멤버 리스트</li>
-      <li data-page="extension">날떼 기한연장</li>
-      <li data-page="absence">벙 불참자</li>
+      <li data-page="members">멤버 관리</li>
+      <li data-page="extension">날떼 연장 관리</li>
+      <li data-page="absence">벙 불참 관리</li>
     </ul>
   </nav>
 
-  <!-- 메인 -->
   <main class="content">
     <header class="top-bar">
       <span class="top-bar-spacer" aria-hidden="true"></span>
-      <h2 id="page-title" class="page-title">페이지 제목</h2>
+      <h2 id="page-title" class="page-title">페이지 준비 중</h2>
       <div class="made-by">
         Created by. <span class="author-name">상큼한토마토</span>
       </div>
@@ -42,6 +43,40 @@
   </main>
 </div>
 
+<div id="password-gate" class="password-gate" aria-live="polite">
+  <div
+    class="password-gate__dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="password-gate-title"
+  >
+    <h2 id="password-gate-title">접근 비밀번호</h2>
+    <p class="password-gate__copy">
+      비밀번호 입력 없이 시스템에 접근할 수 없습니다.
+    </p>
+    <form id="password-gate-form">
+      <label class="sr-only" for="password-gate-input">비밀번호</label>
+      <input
+        id="password-gate-input"
+        type="password"
+        autocomplete="current-password"
+        placeholder="비밀번호 입력"
+        required
+        maxlength="64"
+      />
+      <div class="password-gate__actions">
+        <button type="submit">입장</button>
+        <button type="button" id="password-gate-change">비밀번호 변경</button>
+      </div>
+      <p
+        id="password-gate-feedback"
+        class="password-gate__feedback"
+        role="status"
+        aria-live="polite"
+      ></p>
+    </form>
+  </div>
+</div>
 
 <div id="loading-mask" class="loading-mask hidden">
   <div class="spinner"></div>
