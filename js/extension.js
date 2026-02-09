@@ -88,7 +88,7 @@ function renderTable() {
       <td>${escapeHtml(e.gender)}</td>
       <td>${escapeHtml(e.region)}</td>
       <td>${formatDate(e.enter_date)}</td>
-      <td>${e.extend_days}</td>
+      <td>${formatDaysFromEnterDate(e.enter_date)}</td>
       <td>${escapeHtml(e.status)}</td>
       <td><button onclick="deleteExtension(${e.id})" aria-label="삭제">🗑</button></td>
     </tr>
@@ -186,6 +186,22 @@ const v = id => document.getElementById(id).value;
 function formatDate(val) {
   if (!val) return "";
   return String(val).substring(0, 10);
+}
+
+function formatDaysFromEnterDate(val) {
+  const diff = computeDaysSince(val);
+  if (diff == null) return "정보 없음";
+  return `${diff}일 경과`;
+}
+
+function computeDaysSince(val) {
+  if (!val) return null;
+  const enter = new Date(val);
+  if (Number.isNaN(enter.getTime())) return null;
+  const today = new Date();
+  const diffMs = today.getTime() - enter.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 ? diffDays : 0;
 }
 
 function escapeHtml(str) {

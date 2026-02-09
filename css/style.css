@@ -198,6 +198,17 @@ body.modal-open {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 768px) {
+  .content {
+    padding: 12px 12px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .hamburger {
+    z-index: 1004;
+  }
+}
+
 @media (min-width: 769px) {
   .content {
     padding-left: 24px;
@@ -217,6 +228,10 @@ body.modal-open {
   padding: 24px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+}
+
+.card .table-wrapper table {
+  min-width: 975px;
 }
 
 /* 테이블 가로 스크롤 (모바일) */
@@ -307,6 +322,22 @@ tbody td.col-memo,
 tbody td.col-memo input {
   text-align: left !important;
   padding-left: 20px !important;
+}
+
+.member-table td.col-memo {
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(1.2rem * 10);
+  line-height: 1.2rem;
+}
+
+.member-table .col-action button,
+.wide-table .col-action button {
+  padding: 6px 10px;
+  font-size: 0.85rem;
 }
 
 /*비고의 해더부분은 가운데 정렬*/
@@ -740,14 +771,85 @@ th.sortable .sort-arrow {
   color: #b91c1c;
 }
 
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .member-table th,
+  .member-table td {
+    padding: 10px 8px;
+  }
+
+  .member-table td.col-action button {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .input-row th input,
+  .input-row th select {
+    font-size: 0.8rem;
+  }
+
+  .table-wrapper {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .card .table-wrapper table {
+    min-width: 975px;
+  }
+
+  .member-table .col-action button,
+  .wide-table .col-action button {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}
+
 @media (max-width: 640px) {
+  .member-table th,
+  .member-table td {
+    font-size: 0.75rem;
+  }
+
+  .member-modal__dialog {
+    width: 100%;
+    max-height: 98vh;
+    border-radius: var(--radius-md);
+  }
+
   .member-modal__content {
     padding: 16px 18px 20px;
   }
 
+  .member-modal__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .member-modal__record {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .member-modal__record-meta {
+    text-align: left;
+  }
+
+  .member-modal__grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
   .member-modal__section-head,
   .member-modal__records {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .member-table {
+    font-size: 0.85rem;
   }
 }
