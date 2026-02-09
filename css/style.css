@@ -324,7 +324,7 @@ tbody td.col-memo input {
   padding-left: 20px !important;
 }
 
-.member-table td.col-memo {
+.member-table td.col-memo .memo-text {
   display: -webkit-box;
   -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
@@ -332,6 +332,7 @@ tbody td.col-memo input {
   text-overflow: ellipsis;
   max-height: calc(1.2rem * 10);
   line-height: 1.2rem;
+  word-break: break-word;
 }
 
 .member-table .col-action button,

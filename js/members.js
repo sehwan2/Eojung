@@ -188,7 +188,9 @@ function renderTable(list) {
       <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
       <td class="col-chk editable center" data-field="black">${m.black ? "✔" : ""}</td>
       <td class="col-chk editable center" data-field="admin">${m.admin ? "✔" : ""}</td>
-      <td class="col-memo editable" data-field="memo">${escapeHtml(m.memo || "")}</td>
+      <td class="col-memo editable" data-field="memo">
+        <div class="memo-text">${escapeHtml(m.memo || "")}</div>
+      </td>
       <td class="col-action">
         <button class="del-btn" onclick="deleteMember(${m.id})" aria-label="삭제">🗑</button>
       </td>
