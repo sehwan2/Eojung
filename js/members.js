@@ -3,6 +3,8 @@ import { showLoading, hideLoading } from "./app.js";
 let membersCache = [];
 let sortState = { key: null, asc: true };
 let editingId = null;
+let detailModal = null;
+let memberModalSetup = false;
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -72,8 +74,69 @@ export async function renderMembers() {
         </table>
       </div>
     </div>
+    <div id="member-detail-modal" class="member-modal hidden" aria-hidden="true">
+      <div class="member-modal__backdrop" data-member-modal-close></div>
+      <div class="member-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="member-modal-title">
+        <div class="member-modal__header">
+          <div>
+            <p id="member-modal-title" class="member-modal__name" data-member-nickname></p>
+            <p class="member-modal__subtitle" data-member-subtitle></p>
+          </div>
+          <button type="button" class="member-modal__close" aria-label="닫기" data-member-modal-close>&times;</button>
+        </div>
+        <div class="member-modal__content">
+          <div class="member-modal__grid">
+            <div class="member-modal__pair">
+              <span class="member-modal__label">생년</span>
+              <span class="member-modal__value" data-member-field="birth_year"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">성별</span>
+              <span class="member-modal__value" data-member-field="gender"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">지역</span>
+              <span class="member-modal__value" data-member-field="region"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">상태</span>
+              <span class="member-modal__value" data-member-field="status"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">서류확인</span>
+              <span class="member-modal__value" data-member-field="doc_confirm"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">블랙리스트</span>
+              <span class="member-modal__value" data-member-field="black"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">관리자</span>
+              <span class="member-modal__value" data-member-field="admin"></span>
+            </div>
+          </div>
+          <div class="member-modal__memo">
+            <span class="member-modal__label">메모</span>
+            <p class="member-modal__value" data-member-field="memo"></p>
+          </div>
+          <section class="member-modal__section">
+            <div class="member-modal__section-head">
+              <h3>날떼 연장 기록</h3>
+            </div>
+            <div id="member-extensions" class="member-modal__records"></div>
+          </section>
+          <section class="member-modal__section">
+            <div class="member-modal__section-head">
+              <h3>불참 기록</h3>
+            </div>
+            <div id="member-absences" class="member-modal__records"></div>
+          </section>
+        </div>
+      </div>
+    </div>
   `;
 
+  setupMemberDetailModal();
   document.getElementById("add-btn").onclick = addMember;
   await loadMembers();
 }
@@ -93,6 +156,7 @@ async function loadMembers() {
     if (!res.ok) throw new Error("멤버 목록을 불러오지 못했습니다.");
     membersCache = await res.json();
     renderTable(membersCache);
+    attachMemberRowHandler();
     document.querySelectorAll(".sortable").forEach(th => {
       th.onclick = () => sortBy(th.dataset.key);
     });
@@ -145,6 +209,7 @@ function sortBy(key) {
   });
 
   renderTable(sorted);
+  attachMemberRowHandler();
   updateSortIndicators();
 }
 
@@ -307,4 +372,167 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  return String(value).substring(0, 10);
+}
+
+function attachMemberRowHandler() {
+  const body = document.getElementById("member-body");
+  if (!body || body.dataset.detailListener) return;
+  body.dataset.detailListener = "1";
+  body.addEventListener("click", (event) => {
+    if (event.target.closest("button") || event.target.closest("input") || event.target.closest("select")) return;
+    const row = event.target.closest("tr[data-id]");
+    if (!row || row.classList.contains("editing")) return;
+    const memberId = row.dataset.id;
+    if (!memberId) return;
+    const member = membersCache.find(m => String(m.id) === memberId);
+    if (!member) return;
+    showMemberDetailModal(member);
+  });
+}
+
+function setupMemberDetailModal() {
+  detailModal = document.getElementById("member-detail-modal");
+  if (!detailModal) return;
+  if (detailModal.dataset.modalInit) return;
+  detailModal.dataset.modalInit = "1";
+
+  detailModal.addEventListener("click", (event) => {
+    if (event.target === detailModal || event.target.closest("[data-member-modal-close]")) {
+      hideMemberDetailModal();
+    }
+  });
+
+  if (memberModalSetup) return;
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && detailModal && !detailModal.classList.contains("hidden")) {
+      hideMemberDetailModal();
+    }
+  });
+  memberModalSetup = true;
+}
+
+function showMemberDetailModal(member) {
+  setupMemberDetailModal();
+  if (!detailModal) return;
+  updateMemberModalInfo(member);
+  detailModal.classList.remove("hidden");
+  detailModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  loadMemberRelations(member.id);
+}
+
+function hideMemberDetailModal() {
+  if (!detailModal) return;
+  detailModal.classList.add("hidden");
+  detailModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function updateMemberModalInfo(member) {
+  if (!detailModal) return;
+  const nicknameEl = detailModal.querySelector("[data-member-nickname]");
+  const subtitleEl = detailModal.querySelector("[data-member-subtitle]");
+  if (nicknameEl) nicknameEl.textContent = member.nickname || "알 수 없음";
+  if (subtitleEl) {
+    const regionLabel = member.region || "지역 없음";
+    subtitleEl.textContent = `ID ${member.id} · ${regionLabel}`;
+  }
+
+  detailModal.querySelectorAll("[data-member-field]").forEach(el => {
+    const field = el.dataset.memberField;
+    let value = member[field];
+    if (field === "doc_confirm") {
+      value = formatBooleanLabel(member.doc_confirm, "완료", "미완료");
+    } else if (field === "black") {
+      value = formatBooleanLabel(member.black, "예", "아니오");
+    } else if (field === "admin") {
+      value = formatBooleanLabel(member.admin, "예", "아니오");
+    } else if (field === "memo") {
+      value = member.memo ? member.memo : "없음";
+    } else {
+      value = value ?? "-";
+    }
+    el.textContent = value;
+  });
+}
+
+async function loadMemberRelations(memberId) {
+  if (!detailModal) return;
+  const extContainer = detailModal.querySelector("#member-extensions");
+  const absContainer = detailModal.querySelector("#member-absences");
+  if (!extContainer || !absContainer) return;
+
+  const placeholder = `<p class="member-modal__placeholder">불러오는 중…</p>`;
+  extContainer.innerHTML = placeholder;
+  absContainer.innerHTML = placeholder;
+
+  try {
+    const [extRes, absRes] = await Promise.all([
+      fetch(`/.netlify/functions/getExtensions?memberId=${memberId}`),
+      fetch(`/.netlify/functions/getAbsences?memberId=${memberId}`)
+    ]);
+
+    if (!extRes.ok || !absRes.ok) {
+      throw new Error("관련 정보를 불러오는 중 오류가 발생했습니다.");
+    }
+
+    const [extensions, absences] = await Promise.all([extRes.json(), absRes.json()]);
+    extContainer.innerHTML = renderExtensionRecords(extensions);
+    absContainer.innerHTML = renderAbsenceRecords(absences);
+  } catch (error) {
+    const message = error.message || "관련 정보를 불러오지 못했습니다.";
+    extContainer.innerHTML = `<p class="member-modal__error">${message}</p>`;
+    absContainer.innerHTML = `<p class="member-modal__error">${message}</p>`;
+    showToast(message);
+  }
+}
+
+function renderExtensionRecords(list) {
+  if (!list || !list.length) {
+    return `<p class="member-modal__placeholder">기록 없음</p>`;
+  }
+
+  return list.map(item => {
+    const dateLabel = formatDate(item.enter_date) || "날짜 없음";
+    const daysLabel = item.extend_days != null ? `${item.extend_days}일 연장` : "일수 없음";
+    return `
+      <article class="member-modal__record">
+        <div>
+          <p class="member-modal__record-label">${dateLabel}</p>
+          <p class="member-modal__record-sub">${daysLabel}</p>
+        </div>
+        <span class="member-modal__record-meta">${escapeHtml(item.status || "-")}</span>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderAbsenceRecords(list) {
+  if (!list || !list.length) {
+    return `<p class="member-modal__placeholder">기록 없음</p>`;
+  }
+
+  return list.map(item => {
+    const dateLabel = formatDate(item.event_datetime) || "날짜 없음";
+    const noticeLabel = escapeHtml(item.notice_time || "시간 없음");
+    const hostLabel = escapeHtml(item.host || "벙주 없음");
+    return `
+      <article class="member-modal__record">
+        <div>
+          <p class="member-modal__record-label">${dateLabel}</p>
+          <p class="member-modal__record-sub">${noticeLabel}</p>
+        </div>
+        <span class="member-modal__record-meta">벙주 :  ${hostLabel}</span>
+      </article>
+    `;
+  }).join("");
+}
+
+function formatBooleanLabel(value, positive, negative) {
+  return value ? positive : negative;
 }
