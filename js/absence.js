@@ -5,7 +5,8 @@ export async function renderAbsences() {
 
   document.getElementById("page-content").innerHTML = `
     <div class="card">
-      <table>
+      <div class="table-wrapper">
+        <table class="absence-table">
         <thead>
           <tr class="input-row">
             <th></th>
@@ -43,7 +44,8 @@ export async function renderAbsences() {
           </tr>
         </thead>
         <tbody id="absence-body"></tbody>
-      </table>
+        </table>
+      </div>
     </div>
   `;
 
