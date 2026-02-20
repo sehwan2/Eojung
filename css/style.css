@@ -642,11 +642,18 @@ th.sortable .sort-arrow {
 @media (max-width: 480px) {
   .top-bar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .top-bar h2 {
     font-size: 1.1rem;
+    text-align: center;
+    width: 100%;
+  }
+  .top-bar h2.page-title,
+  .page-title {
+    text-align: center;
+    width: 100%;
   }
 }
 
