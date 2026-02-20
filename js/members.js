@@ -62,7 +62,7 @@ export async function renderMembers() {
               <th class="col-gender sortable" data-key="gender" data-label="성별">성별</th>
               <th class="col-region sortable" data-key="region" data-label="지역">지역</th>
               <th class="col-chk sortable" data-key="doc_confirm" data-label="서류">서류</th>
-              <th class="col-realname">본명</th>
+              <th class="col-realname" data-key="real_name" data-label="본명">본명</th>
               <th class="col-status sortable" data-key="status" data-label="상태">상태</th>
               <th class="col-chk sortable" data-key="black" data-label="블랙">블랙</th>
               <th class="col-chk sortable" data-key="admin" data-label="운영진">운영진</th>
@@ -170,7 +170,9 @@ async function loadMembers() {
 
 /* =========================
    테이블 렌더
-========================= */
+   modified by mslim on 2026-02-20
+   added editable data-field="real_name"
+   ========================= */
 function renderTable(list) {
   const body = document.getElementById("member-body");
   body.innerHTML = list.map((m, i) => `
@@ -184,7 +186,7 @@ function renderTable(list) {
       <td class="col-gender">${escapeHtml(m.gender)}</td>
       <td class="col-region editable" data-field="region">${escapeHtml(m.region || "")}</td>
       <td class="col-chk center">${m.doc_confirm ? "✔" : ""}</td>
-      <td class="col-realname">${escapeHtml(m.real_name || "")}</td>
+      <td class="col-realname editable" data-field="real_name">${escapeHtml(m.real_name || "")}</td>
       <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
       <td class="col-chk editable center" data-field="black">${m.black ? "✔" : ""}</td>
       <td class="col-chk editable center" data-field="admin">${m.admin ? "✔" : ""}</td>
@@ -276,6 +278,7 @@ async function saveMember(id) {
   const data = {
     id,
     nickname: row.querySelector('[data-field="nickname"] input').value,
+    real_name: row.querySelector('[data-field="real_name"] input').value,
     region: row.querySelector('[data-field="region"] input').value,
     status: row.querySelector('[data-field="status"] select').value,
     black: row.querySelector('[data-field="black"] input').checked,
