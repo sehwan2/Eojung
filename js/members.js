@@ -5,6 +5,7 @@ let sortState = { key: null, asc: true };
 let editingId = null;
 let detailModal = null;
 let memberModalSetup = false;
+let memberModalEditing = false;
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -49,7 +50,7 @@ export async function renderMembers() {
               </th>
               <th class="col-chk"><input type="checkbox" id="i-black"></th>
               <th class="col-chk"><input type="checkbox" id="i-admin"></th>
-              <th class="col-memo"><input id="i-memo" placeholder="비고"></th>
+              <th class="col-memo"><input id="i-memo" placeholder="메모"></th>
               <th class="col-action">
                 <button id="add-btn">등록</button>
               </th>
@@ -66,7 +67,7 @@ export async function renderMembers() {
               <th class="col-status sortable" data-key="status" data-label="상태">상태</th>
               <th class="col-chk sortable" data-key="black" data-label="블랙">블랙</th>
               <th class="col-chk sortable" data-key="admin" data-label="운영진">운영진</th>
-              <th class="col-memo">비고</th>
+              <th class="col-memo">메모</th>
               <th class="col-action">삭제</th>
             </tr>
           </thead>
@@ -82,7 +83,11 @@ export async function renderMembers() {
             <p id="member-modal-title" class="member-modal__name" data-member-nickname></p>
             <p class="member-modal__subtitle" data-member-subtitle></p>
           </div>
-          <button type="button" class="member-modal__close" aria-label="닫기" data-member-modal-close>&times;</button>
+          <div class="member-modal__actions">
+            <button type="button" class="member-modal__action-btn" data-member-edit>??</button>
+            <button type="button" class="member-modal__action-btn is-danger" data-member-delete>??</button>
+            <button type="button" class="member-modal__close" aria-label="??" data-member-modal-close>&times;</button>
+          </div>
         </div>
         <div class="member-modal__content">
           <div class="member-modal__grid">
@@ -138,6 +143,8 @@ export async function renderMembers() {
 
   setupMemberDetailModal();
   document.getElementById("add-btn").onclick = addMember;
+  setupResponsiveInputLabels();
+  setupAddGenderToggle();
   await loadMembers();
 }
 
@@ -178,23 +185,23 @@ function renderTable(list) {
   body.innerHTML = list.map((m, i) => `
     <tr data-id="${m.id}">
       <td class="col-action">
-        <button class="edit-btn" onclick="editMember(${m.id})" aria-label="수정">✏️</button>
+        <button class="edit-btn icon-btn icon-edit" onclick="editMember(${m.id})" aria-label="edit">${iconEdit()}</button>
       </td>
       <td class="col-no">${i + 1}</td>
       <td class="col-nickname editable" data-field="nickname">${escapeHtml(m.nickname)}</td>
       <td class="col-birth">${escapeHtml(m.birth_year)}</td>
-      <td class="col-gender">${escapeHtml(m.gender)}</td>
+      <td class="col-gender editable" data-field="gender">${escapeHtml(m.gender)}</td>
       <td class="col-region editable" data-field="region">${escapeHtml(m.region || "")}</td>
       <td class="col-chk center">${m.doc_confirm ? "✔" : ""}</td>
       <td class="col-realname editable" data-field="real_name">${escapeHtml(m.real_name || "")}</td>
       <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
-      <td class="col-chk editable center" data-field="black">${m.black ? "✔" : ""}</td>
-      <td class="col-chk editable center" data-field="admin">${m.admin ? "✔" : ""}</td>
+      <td class="col-chk editable center" data-field="black">${m.black ? iconBlackCard() : ""}</td>
+      <td class="col-chk editable center" data-field="admin">${m.admin ? iconAdminUser() : ""}</td>
       <td class="col-memo editable" data-field="memo">
         <div class="memo-text">${escapeHtml(m.memo || "")}</div>
       </td>
       <td class="col-action">
-        <button class="del-btn" onclick="deleteMember(${m.id})" aria-label="삭제">🗑</button>
+        <button class="del-btn icon-btn icon-delete" onclick="deleteMember(${m.id})" aria-label="delete">${iconDelete()}</button>
       </td>
     </tr>
   `).join("");
@@ -234,12 +241,13 @@ function updateSortIndicators() {
 ========================= */
 window.editMember = (id) => {
   if (editingId && editingId !== id) {
-    alert("다른 멤버를 수정 중입니다. 먼저 저장하세요.");
+    alert("\uB2E4\uB978 \uBA64\uBC84\uB97C \uC218\uC815 \uC911\uC785\uB2C8\uB2E4. \uBA3C\uC800 \uC800\uC7A5\uD574\uC8FC\uC138\uC694.");
     return;
   }
 
   editingId = id;
   const row = document.querySelector(`tr[data-id="${id}"]`);
+  const member = membersCache.find(m => String(m.id) === String(id));
   row.classList.add("editing");
 
   row.querySelectorAll(".editable").forEach(td => {
@@ -249,19 +257,23 @@ window.editMember = (id) => {
     if (field === "status") {
       td.innerHTML = `
         <select>
-          <option>활동</option>
-          <option>외출</option>
-          <option>강퇴</option>
+          <option>\uD65C\uB3D9</option>
+          <option>\uD734\uBA74</option>
+          <option>\uAC15\uD1F4</option>
         </select>`;
       td.querySelector("select").value = value;
+    } else if (field === "gender") {
+      td.innerHTML = renderGenderEditor(value, true);
+      bindGenderEditor(td);
     } else if (field === "black" || field === "admin") {
-      td.innerHTML = `<input type="checkbox" ${value === "✔" ? "checked" : ""}>`;
+      const checked = member ? Boolean(member[field]) : false;
+      td.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}>`;
     } else {
       td.innerHTML = `<input value="${escapeHtml(value)}">`;
     }
   });
 
-  row.querySelector(".edit-btn").innerText = "💾";
+  row.querySelector(".edit-btn").innerHTML = iconSave();
   row.querySelector(".edit-btn").onclick = () => saveMember(id);
 
   const delBtn = row.querySelector(".del-btn");
@@ -278,6 +290,7 @@ async function saveMember(id) {
   const data = {
     id,
     nickname: row.querySelector('[data-field="nickname"] input').value,
+    gender: getGenderFieldValue(row.querySelector('[data-field="gender"]')),
     real_name: row.querySelector('[data-field="real_name"] input').value,
     region: row.querySelector('[data-field="region"] input').value,
     status: row.querySelector('[data-field="status"] select').value,
@@ -292,12 +305,12 @@ async function saveMember(id) {
       method: "POST",
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error("저장에 실패했습니다.");
-    showToast("저장되었습니다 ✅");
+    if (!res.ok) throw new Error("\uC800\uC7A5\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
+    showToast("\uC800\uC7A5\uB418\uC5C8\uC2B5\uB2C8\uB2E4.");
     editingId = null;
     await loadMembers();
   } catch (e) {
-    showToast(e.message || "오류가 발생했습니다.");
+    showToast(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
   } finally {
     hideLoading();
   }
@@ -368,6 +381,167 @@ document.addEventListener("keydown", (e) => {
 const val = id => document.getElementById(id).value;
 const chk = id => document.getElementById(id).checked;
 
+function iconEdit() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0 0-3L17.5 5a2.1 2.1 0 0 0-3 0L4 15.5V20zm3.2-2H6v-1.2l8.8-8.8 1.2 1.2L7.2 18z"/></svg>`;
+}
+
+function iconDelete() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7z"/></svg>`;
+}
+
+function iconSave() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3h2zm2 0v6h8V3H7zm0 16h10V11H7v8z"/></svg>`;
+}
+
+function iconAdminUser() {
+  return `<span class="status-icon status-icon--admin" aria-label="운영진">👤</span>`;
+}
+
+function iconBlackCard() {
+  return `<span class="status-icon status-icon--black" aria-label="블랙">🟥</span>`;
+}
+
+function renderGenderEditor(currentValue, compact = false) {
+  const value = String(currentValue || "");
+  const maleSelected = value === "\uB0A8";
+  const femaleSelected = value === "\uC5EC";
+  const cls = compact ? "gender-toggle is-compact" : "gender-toggle";
+  const cycleLabel = femaleSelected ? "\uC5EC" : "\uB0A8";
+  return `
+    <div class="${cls}" data-gender-toggle>
+      <button type="button" class="gender-chip${maleSelected ? " is-active" : ""}" data-value="\uB0A8" aria-label="\uB0A8">\u2642</button>
+      <button type="button" class="gender-chip${femaleSelected ? " is-active" : ""}" data-value="\uC5EC" aria-label="\uC5EC">\u2640</button>
+    </div>
+    <button type="button" class="gender-cycle" data-gender-cycle>${cycleLabel}</button>
+    <select class="gender-select-native" data-gender-native>
+      <option value=""></option>
+      <option value="\uB0A8"${maleSelected ? " selected" : ""}>\uB0A8</option>
+      <option value="\uC5EC"${femaleSelected ? " selected" : ""}>\uC5EC</option>
+    </select>
+  `;
+}
+
+function bindGenderEditor(scope) {
+  if (!scope) return;
+  const native = scope.querySelector("[data-gender-native]");
+  if (!native) return;
+  const cycle = scope.querySelector("[data-gender-cycle]");
+
+  const syncCycle = () => {
+    if (!cycle) return;
+    const isFemale = native.value === "\uC5EC";
+    cycle.textContent = isFemale ? "\uC5EC" : "\uB0A8";
+    cycle.classList.toggle("is-female", isFemale);
+    cycle.classList.toggle("is-male", !isFemale);
+  };
+
+  scope.querySelectorAll("[data-gender-toggle] .gender-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      native.value = btn.dataset.value || "";
+      scope.querySelectorAll("[data-gender-toggle] .gender-chip").forEach(chip => {
+        chip.classList.toggle("is-active", chip === btn);
+      });
+      syncCycle();
+    });
+  });
+
+  if (cycle) {
+    cycle.addEventListener("click", () => {
+      native.value = native.value === "\uB0A8" ? "\uC5EC" : "\uB0A8";
+      scope.querySelectorAll("[data-gender-toggle] .gender-chip").forEach(chip => {
+        chip.classList.toggle("is-active", chip.dataset.value === native.value);
+      });
+      syncCycle();
+    });
+  }
+
+  syncCycle();
+}
+
+function getGenderFieldValue(fieldCell) {
+  if (!fieldCell) return "";
+  const native = fieldCell.querySelector("[data-gender-native]");
+  if (native) return native.value;
+  const selected = fieldCell.querySelector("[data-gender-toggle] .gender-chip.is-active");
+  if (selected) return selected.dataset.value || "";
+  const input = fieldCell.querySelector("input");
+  if (input) return input.value;
+  return (fieldCell.textContent || "").trim();
+}
+
+function setupAddGenderToggle() {
+  const select = document.getElementById("i-gender");
+  if (!select) return;
+  const wrap = select.parentElement;
+  if (!wrap) return;
+
+  let toggle = wrap.querySelector("[data-gender-toggle-root]");
+  if (!toggle) {
+    toggle = document.createElement("div");
+    toggle.className = "gender-toggle";
+    toggle.dataset.genderToggleRoot = "1";
+    toggle.innerHTML = `
+      <button type="button" class="gender-chip" data-value="\uB0A8" aria-label="\uB0A8">\u2642</button>
+      <button type="button" class="gender-chip" data-value="\uC5EC" aria-label="\uC5EC">\u2640</button>
+    `;
+    wrap.appendChild(toggle);
+  }
+
+  let cycle = wrap.querySelector("[data-gender-cycle-root]");
+  if (!cycle) {
+    cycle = document.createElement("button");
+    cycle.type = "button";
+    cycle.className = "gender-cycle";
+    cycle.dataset.genderCycleRoot = "1";
+    wrap.appendChild(cycle);
+  }
+
+  const sync = () => {
+    const isFemale = select.value === "\uC5EC";
+    toggle.querySelectorAll(".gender-chip").forEach(btn => {
+      btn.classList.toggle("is-active", btn.dataset.value === select.value);
+    });
+    cycle.textContent = isFemale ? "\uC5EC" : "\uB0A8";
+    cycle.classList.toggle("is-female", isFemale);
+    cycle.classList.toggle("is-male", !isFemale);
+  };
+
+  toggle.querySelectorAll(".gender-chip").forEach(btn => {
+    btn.onclick = () => {
+      select.value = btn.dataset.value || "";
+      sync();
+    };
+  });
+
+  cycle.onclick = () => {
+    select.value = select.value === "\uB0A8" ? "\uC5EC" : "\uB0A8";
+    sync();
+  };
+
+  sync();
+}
+
+function setupResponsiveInputLabels() {
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const pairs = [
+    ["i-nickname", "닉네임", "닉"],
+    ["i-birth", "년생", "생"],
+    ["i-region", "지역", "지"],
+    ["i-realname", "이름", "이름"],
+    ["i-memo", "메모", "메"]
+  ];
+  pairs.forEach(([id, full, compact]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.placeholder = isMobile ? compact : full;
+  });
+
+  if (!window.__memberPlaceholderResizeBound) {
+    window.addEventListener("resize", () => setupResponsiveInputLabels());
+    window.__memberPlaceholderResizeBound = true;
+  }
+}
+
 /** HTML 이스케이프 (XSS 방지) */
 function escapeHtml(str) {
   if (str == null) return "";
@@ -407,6 +581,14 @@ function setupMemberDetailModal() {
   detailModal.dataset.modalInit = "1";
 
   detailModal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-member-edit]")) {
+      handleModalEditAction();
+      return;
+    }
+    if (event.target.closest("[data-member-delete]")) {
+      handleModalDeleteAction();
+      return;
+    }
     if (event.target === detailModal || event.target.closest("[data-member-modal-close]")) {
       hideMemberDetailModal();
     }
@@ -424,6 +606,11 @@ function setupMemberDetailModal() {
 function showMemberDetailModal(member) {
   setupMemberDetailModal();
   if (!detailModal) return;
+  detailModal.dataset.memberId = String(member.id);
+  memberModalEditing = false;
+  syncModalActionButtons();
+  ensureMemberModalEditor();
+  setModalEditMode(false);
   updateMemberModalInfo(member);
   detailModal.classList.remove("hidden");
   detailModal.setAttribute("aria-hidden", "false");
@@ -433,6 +620,8 @@ function showMemberDetailModal(member) {
 
 function hideMemberDetailModal() {
   if (!detailModal) return;
+  memberModalEditing = false;
+  setModalEditMode(false);
   detailModal.classList.add("hidden");
   detailModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
@@ -464,6 +653,141 @@ function updateMemberModalInfo(member) {
     }
     el.textContent = value;
   });
+}
+
+function syncModalActionButtons() {
+  if (!detailModal) return;
+  const editBtn = detailModal.querySelector("[data-member-edit]");
+  const deleteBtn = detailModal.querySelector("[data-member-delete]");
+  if (editBtn) editBtn.textContent = memberModalEditing ? "저장" : "수정";
+  if (deleteBtn) deleteBtn.textContent = memberModalEditing ? "취소" : "삭제";
+}
+
+function ensureMemberModalEditor() {
+  if (!detailModal) return null;
+  let editor = detailModal.querySelector("#member-modal-editor");
+  if (editor) return editor;
+  const content = detailModal.querySelector(".member-modal__content");
+  if (!content) return null;
+  editor = document.createElement("section");
+  editor.id = "member-modal-editor";
+  editor.className = "member-modal__editor hidden";
+  editor.innerHTML = `
+    <input id="mme-nickname" placeholder="닉네임" />
+    <select id="mme-gender">
+      <option value="남">남</option>
+      <option value="여">여</option>
+    </select>
+    <input id="mme-region" placeholder="지역" />
+    <select id="mme-status">
+      <option>활동</option>
+      <option>휴면</option>
+      <option>강퇴</option>
+    </select>
+    <label><input type="checkbox" id="mme-black" /> 블랙</label>
+    <label><input type="checkbox" id="mme-admin" /> 운영진</label>
+    <textarea id="mme-memo" class="full" placeholder="메모"></textarea>
+  `;
+  content.insertBefore(editor, content.firstElementChild);
+  return editor;
+}
+
+function setModalEditMode(enabled) {
+  if (!detailModal) return;
+  const editor = ensureMemberModalEditor();
+  const grid = detailModal.querySelector(".member-modal__grid");
+  const memo = detailModal.querySelector(".member-modal__memo");
+  const sections = detailModal.querySelectorAll(".member-modal__section");
+  if (editor) editor.classList.toggle("hidden", !enabled);
+  if (grid) grid.classList.toggle("hidden", enabled);
+  if (memo) memo.classList.toggle("hidden", enabled);
+  sections.forEach(section => section.classList.toggle("hidden", enabled));
+  detailModal.classList.toggle("is-editing", enabled);
+  syncModalActionButtons();
+}
+
+function populateModalEditor(member) {
+  const editor = ensureMemberModalEditor();
+  if (!editor || !member) return;
+  const nickname = editor.querySelector("#mme-nickname");
+  const gender = editor.querySelector("#mme-gender");
+  const region = editor.querySelector("#mme-region");
+  const status = editor.querySelector("#mme-status");
+  const black = editor.querySelector("#mme-black");
+  const admin = editor.querySelector("#mme-admin");
+  const memo = editor.querySelector("#mme-memo");
+  if (nickname) nickname.value = member.nickname || "";
+  if (gender) gender.value = member.gender || "남";
+  if (region) region.value = member.region || "";
+  if (status) status.value = member.status || "활동";
+  if (black) black.checked = Boolean(member.black);
+  if (admin) admin.checked = Boolean(member.admin);
+  if (memo) memo.value = member.memo || "";
+}
+
+function getActiveModalMember() {
+  if (!detailModal) return null;
+  const id = detailModal.dataset.memberId;
+  if (!id) return null;
+  return membersCache.find(m => String(m.id) === String(id)) || null;
+}
+
+async function handleModalEditAction() {
+  const member = getActiveModalMember();
+  if (!member) return;
+  if (!memberModalEditing) {
+    memberModalEditing = true;
+    populateModalEditor(member);
+    setModalEditMode(true);
+    return;
+  }
+  const editor = ensureMemberModalEditor();
+  if (!editor) return;
+  const payload = {
+    id: member.id,
+    nickname: editor.querySelector("#mme-nickname")?.value || "",
+    gender: editor.querySelector("#mme-gender")?.value || "남",
+    real_name: member.real_name || "",
+    region: editor.querySelector("#mme-region")?.value || "",
+    status: editor.querySelector("#mme-status")?.value || "활동",
+    black: Boolean(editor.querySelector("#mme-black")?.checked),
+    admin: Boolean(editor.querySelector("#mme-admin")?.checked),
+    memo: editor.querySelector("#mme-memo")?.value || ""
+  };
+  showLoading();
+  try {
+    const res = await fetch("/.netlify/functions/updateMember", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("수정에 실패했습니다.");
+    await loadMembers();
+    const refreshed = membersCache.find(m => String(m.id) === String(member.id));
+    if (refreshed) {
+      updateMemberModalInfo(refreshed);
+      detailModal.dataset.memberId = String(refreshed.id);
+    }
+    memberModalEditing = false;
+    setModalEditMode(false);
+    showToast("수정되었습니다.");
+  } catch (error) {
+    showToast(error.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
+}
+
+function handleModalDeleteAction() {
+  const member = getActiveModalMember();
+  if (!member) return;
+  if (memberModalEditing) {
+    memberModalEditing = false;
+    setModalEditMode(false);
+    updateMemberModalInfo(member);
+    return;
+  }
+  hideMemberDetailModal();
+  window.deleteMember(member.id);
 }
 
 async function loadMemberRelations(memberId) {

@@ -1,10 +1,12 @@
 import { showLoading, hideLoading, getAuthHeaders } from "./app.js";
+
 let members = [];
 let extensions = [];
 let selectedMember = null;
+let sortState = { key: null, asc: true };
 
 export async function renderExtensions() {
-  document.getElementById("page-title").innerText = "날떼 기한 연장";
+  document.getElementById("page-title").innerText = "\uB0A0\uB5BC \uAE30\uD55C \uC5F0\uC7A5";
 
   document.getElementById("page-content").innerHTML = `
     <div class="card">
@@ -12,29 +14,29 @@ export async function renderExtensions() {
         <table class="wide-table">
           <thead>
             <tr class="input-row">
-              <th></th>
-              <th>
-                <input id="e-nickname" placeholder="닉네임" autocomplete="off">
+              <th class="col-no"></th>
+              <th class="col-nickname">
+                <input id="e-nickname" placeholder="\uB2C9\uB124\uC784" autocomplete="off">
                 <div id="nickname-suggest" class="suggest-box"></div>
               </th>
-              <th><input id="e-birth" disabled></th>
-              <th><input id="e-gender" disabled></th>
-              <th><input id="e-region" disabled></th>
-              <th><input type="date" id="e-date"></th>
-              <th><input id="e-days" disabled></th>
-              <th><input id="e-status" value="유지"></th>
-              <th><button id="add-extension">등록</button></th>
+              <th class="col-birth"><input id="e-birth" disabled></th>
+              <th class="col-gender"><input id="e-gender" disabled></th>
+              <th class="col-region"><input id="e-region" disabled></th>
+              <th class="col-date"><input type="date" id="e-date"></th>
+              <th class="col-days"><input id="e-days" disabled></th>
+              <th class="col-status"><input id="e-status" value="\uC720\uC9C0"></th>
+              <th class="col-action"><button id="add-extension">\uB4F1\uB85D</button></th>
             </tr>
             <tr>
-              <th>No</th>
-              <th>닉네임</th>
-              <th>나이</th>
-              <th>성별</th>
-              <th>지역</th>
-              <th>입장 날짜</th>
-              <th>연장 일수</th>
-              <th>사유</th>
-              <th>삭제</th>
+              <th class="col-no">No</th>
+              <th class="col-nickname sortable" data-key="nickname" data-label="\uB2C9\uB124\uC784">\uB2C9\uB124\uC784</th>
+              <th class="col-birth sortable" data-key="birth_year" data-label="\uB098\uC774">\uB098\uC774</th>
+              <th class="col-gender sortable" data-key="gender" data-label="\uC131\uBCC4">\uC131\uBCC4</th>
+              <th class="col-region sortable" data-key="region" data-label="\uC9C0\uC5ED">\uC9C0\uC5ED</th>
+              <th class="col-date sortable" data-key="enter_date" data-label="\uC785\uC7A5 \uB0A0\uC9DC">\uC785\uC7A5 \uB0A0\uC9DC</th>
+              <th class="col-days sortable" data-key="extend_days" data-label="\uC5F0\uC7A5 \uC77C\uC218">\uC5F0\uC7A5 \uC77C\uC218</th>
+              <th class="col-status sortable" data-key="status" data-label="\uC0AC\uC720">\uC0AC\uC720</th>
+              <th class="col-action">\uC0AD\uC81C</th>
             </tr>
           </thead>
           <tbody id="extension-body"></tbody>
@@ -51,8 +53,6 @@ export async function renderExtensions() {
   document.getElementById("add-extension").onclick = addExtension;
 }
 
-/* ---------- data ---------- */
-
 async function loadMembers() {
   try {
     const res = await fetch("/.netlify/functions/getMembers");
@@ -66,36 +66,88 @@ async function loadExtensions() {
   showLoading();
   try {
     const res = await fetch("/.netlify/functions/getExtensions");
-    if (!res.ok) throw new Error("목록을 불러오지 못했습니다.");
+    if (!res.ok) throw new Error("\uBAA9\uB85D\uC744 \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
     extensions = await res.json();
-    renderTable();
+    renderSortedTable();
   } catch (e) {
-    alert(e.message || "오류가 발생했습니다.");
+    alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
   } finally {
     hideLoading();
   }
 }
 
-/* ---------- render ---------- */
-
 function renderTable() {
   const body = document.getElementById("extension-body");
-  body.innerHTML = extensions.map((e, i) => `
+  const sorted = getSortedExtensions();
+  body.innerHTML = sorted.map((e, i) => `
     <tr>
-      <td>${i + 1}</td>
-      <td>${escapeHtml(e.nickname)}</td>
-      <td>${escapeHtml(e.birth_year)}</td>
-      <td>${escapeHtml(e.gender)}</td>
-      <td>${escapeHtml(e.region)}</td>
-      <td>${formatDate(e.enter_date)}</td>
-      <td>${formatDaysFromEnterDate(e.enter_date)}</td>
-      <td>${escapeHtml(e.status)}</td>
-      <td><button onclick="deleteExtension(${e.id})" aria-label="삭제">🗑</button></td>
+      <td class="col-no">${i + 1}</td>
+      <td class="col-nickname">${escapeHtml(e.nickname)}</td>
+      <td class="col-birth">${escapeHtml(e.birth_year)}</td>
+      <td class="col-gender">${escapeHtml(e.gender)}</td>
+      <td class="col-region">${escapeHtml(e.region)}</td>
+      <td class="col-date">${formatDate(e.enter_date)}</td>
+      <td class="col-days">${formatDaysFromEnterDate(e.enter_date)}</td>
+      <td class="col-status">${escapeHtml(e.status)}</td>
+      <td class="col-action"><button class="icon-btn icon-delete" onclick="deleteExtension(${e.id})" aria-label="\uC0AD\uC81C">${iconDelete()}</button></td>
     </tr>
   `).join("");
 }
 
-/* ---------- typeahead ---------- */
+function renderSortedTable() {
+  renderTable();
+  bindSortHandlers();
+  updateSortIndicators();
+}
+
+function bindSortHandlers() {
+  document.querySelectorAll(".wide-table .sortable").forEach(th => {
+    th.onclick = () => sortBy(th.dataset.key);
+  });
+}
+
+function sortBy(key) {
+  sortState.asc = sortState.key === key ? !sortState.asc : true;
+  sortState.key = key;
+  renderSortedTable();
+}
+
+function getSortedExtensions() {
+  if (!sortState.key) return [...extensions];
+  const key = sortState.key;
+  return [...extensions].sort((a, b) => {
+    const left = getSortValue(a, key);
+    const right = getSortValue(b, key);
+    if (left > right) return sortState.asc ? 1 : -1;
+    if (left < right) return sortState.asc ? -1 : 1;
+    return 0;
+  });
+}
+
+function getSortValue(item, key) {
+  if (key === "enter_date") {
+    const ts = new Date(item.enter_date).getTime();
+    return Number.isNaN(ts) ? -Infinity : ts;
+  }
+  if (key === "extend_days") {
+    const days = computeDaysSince(item.enter_date);
+    return days == null ? -Infinity : days;
+  }
+  if (key === "birth_year") {
+    const year = Number(item.birth_year);
+    return Number.isNaN(year) ? -Infinity : year;
+  }
+  return String(item[key] ?? "").toLowerCase();
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll(".wide-table .sortable").forEach(th => {
+    const key = th.dataset.key;
+    const baseLabel = th.dataset.label || th.textContent.trim();
+    const arrow = sortState.key === key ? (sortState.asc ? " \u2191" : " \u2193") : "";
+    th.innerHTML = `${baseLabel}${arrow ? `<span class="sort-arrow">${arrow}</span>` : ""}`;
+  });
+}
 
 function handleTypeahead(e) {
   const value = e.target.value;
@@ -127,8 +179,6 @@ function selectMember(m) {
   document.getElementById("nickname-suggest").innerHTML = "";
 }
 
-/* ---------- logic ---------- */
-
 function calcDays() {
   const date = document.getElementById("e-date").value;
   if (!date) return;
@@ -142,7 +192,7 @@ function calcDays() {
 
 async function addExtension() {
   if (!selectedMember) {
-    alert("멤버를 선택하세요");
+    alert("\uBA64\uBC84\uB97C \uC120\uD0DD\uD558\uC138\uC694.");
     return;
   }
   showLoading();
@@ -160,10 +210,10 @@ async function addExtension() {
         status: v("e-status")
       })
     });
-    if (!res.ok) throw new Error("등록에 실패했습니다.");
+    if (!res.ok) throw new Error("\uB4F1\uB85D\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
     await loadExtensions();
   } catch (e) {
-    alert(e.message || "오류가 발생했습니다.");
+    alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
   } finally {
     hideLoading();
   }
@@ -180,10 +230,10 @@ window.deleteExtension = async (id) => {
       },
       body: JSON.stringify({ id })
     });
-    if (!res.ok) throw new Error("삭제에 실패했습니다.");
+    if (!res.ok) throw new Error("\uC0AD\uC81C\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
     await loadExtensions();
   } catch (e) {
-    alert(e.message || "오류가 발생했습니다.");
+    alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
   } finally {
     hideLoading();
   }
@@ -198,8 +248,8 @@ function formatDate(val) {
 
 function formatDaysFromEnterDate(val) {
   const diff = computeDaysSince(val);
-  if (diff == null) return "정보 없음";
-  return `${diff}일 경과`;
+  if (diff == null) return "\uC815\uBCF4 \uC5C6\uC74C";
+  return `${diff}\uC77C \uACBD\uACFC`;
 }
 
 function computeDaysSince(val) {
@@ -219,4 +269,8 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function iconDelete() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7z"/></svg>`;
 }

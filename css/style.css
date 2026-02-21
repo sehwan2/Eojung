@@ -309,7 +309,7 @@ body.modal-open {
 }
 
 .card .table-wrapper table {
-  min-width: 975px;
+  min-width: 860px;
 }
 
 /* 테이블 가로 스크롤 (모바일) */
@@ -379,6 +379,11 @@ tbody tr:hover {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+.input-row input::placeholder {
+  font-size: 0.76rem;
+  letter-spacing: -0.01em;
+}
+
 /* 수정 중인 행 */
 tr.editing {
   background: rgba(37, 99, 235, 0.06) !important;
@@ -387,13 +392,69 @@ tr.editing {
 /* ===================================================
    [특화] 멤버 테이블 전용 너비 및 예외 정렬
 =================================================== */
-.member-table .col-action { width: 60px; }
-.member-table .col-no     { width: 50px; }
-.member-table .col-birth  { width: 70px; }
-.member-table .col-gender { width: 80px; }
+.member-table .col-action { width: 56px; }
+.member-table .col-no     { width: 28px; }
+.member-table .col-nickname { width: 84px; }
+.member-table .col-birth  { width: 82px; }
+.member-table .col-gender { width: 70px; }
+.member-table .col-region { width: 92px; }
 .member-table .col-chk    { width: 72px; }  /* 블랙·운영진 + 정렬 화살표 한 줄 표시 */
-.member-table .col-status { width: 100px; }
+.member-table .col-status { width: 92px; }
+.member-table .col-realname { width: 92px; }
 .member-table .col-memo   { width: auto; }
+
+.member-table th.col-no,
+.member-table td.col-no {
+  font-size: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.member-table .edit-btn,
+.member-table .del-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.member-table td:not(.col-memo):not(.col-action):not(.col-chk),
+.wide-table td:not(:last-child),
+.absence-table td:not(:last-child) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 입력행이 컬럼 폭을 과점하지 않도록 핵심 필드 폭 제한 */
+.member-table .input-row .col-nickname input,
+.member-table .input-row .col-birth input,
+.member-table .input-row .col-gender select,
+.member-table .input-row .col-region input {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+
+.member-table .input-row .col-action button {
+  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.wide-table .col-no,
+.absence-table .col-no {
+  width: 38px;
+}
 
 /* '비고'만 데이터 왼쪽 정렬 */
 tbody td.col-memo, 
@@ -404,19 +465,134 @@ tbody td.col-memo input {
 
 .member-table td.col-memo .memo-text {
   display: -webkit-box;
-  -webkit-line-clamp: 10;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: calc(1.2rem * 10);
+  max-height: 1.25rem;
   line-height: 1.2rem;
   word-break: break-word;
 }
 
 .member-table .col-action button,
 .wide-table .col-action button {
-  padding: 6px 10px;
+  padding: 1px 4px;
   font-size: 0.85rem;
+}
+
+.icon-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #1f2937;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.icon-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.icon-btn:hover {
+  background: #f8fafc;
+  border-color: #d1d5db;
+}
+
+.icon-btn.icon-delete {
+  color: #b91c1c;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.status-icon--admin {
+  color: #0369a1;
+}
+
+.status-icon--black {
+  color: #b91c1c;
+}
+
+.gender-toggle {
+  display: none;
+  gap: 4px;
+  justify-content: center;
+}
+
+.gender-chip {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.gender-chip.is-active {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.gender-toggle .gender-chip:nth-child(1).is-active {
+  border-color: #7dd3fc;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.gender-toggle .gender-chip:nth-child(2).is-active {
+  border-color: #f9a8d4;
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.gender-cycle {
+  display: none;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #1f2937;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gender-cycle.is-male {
+  border-color: #7dd3fc;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.gender-cycle.is-female {
+  border-color: #f9a8d4;
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.gender-select-native {
+  width: 56px;
+  margin: 0 auto;
+  display: block;
+  text-align: center;
 }
 
 /*비고의 해더부분은 가운데 정렬*/
@@ -427,7 +603,14 @@ thead th.col-memo {
 /* ===== typeahead suggestion ===== */
 
 .input-row th {
-  position: relative; /* 기준점 */
+  position: relative; /* base */
+}
+
+.member-table .input-row th,
+.wide-table .input-row th,
+.absence-table .input-row th {
+  background: #f8fafc;
+  border-bottom-color: #e2e8f0;
 }
 
 .suggest-box {
@@ -445,7 +628,10 @@ thead th.col-memo {
 }
 
 .suggest-box div {
+  min-height: 40px;
   padding: 10px 12px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   font-size: 0.9375rem;
   transition: background var(--transition);
@@ -581,6 +767,7 @@ thead th {
 th.sortable {
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
   white-space: nowrap;
   transition: background var(--transition), color var(--transition);
 }
@@ -750,6 +937,77 @@ th.sortable .sort-arrow {
   background: var(--border-focus);
 }
 
+.member-modal__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-modal__action-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.member-modal__action-btn.is-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff5f5;
+}
+
+.member-modal__editor {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.member-modal__editor.hidden {
+  display: none;
+}
+
+.member-modal__editor .full {
+  grid-column: 1 / -1;
+}
+
+.member-modal__editor textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+}
+
+.member-modal__editor label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.member-modal__editor input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
 .member-modal__content {
   padding: 20px 24px 24px;
   overflow-y: auto;
@@ -868,8 +1126,13 @@ th.sortable .sort-arrow {
   }
 
   .member-table td.col-action button {
-    padding: 4px 8px;
+    padding: 2px 4px;
     font-size: 0.75rem;
+  }
+
+  .member-table thead tr th:first-child,
+  .member-table tbody tr td:first-child {
+    display: none;
   }
 
   .input-row th input,
@@ -885,21 +1148,201 @@ th.sortable .sort-arrow {
   }
 
   .card .table-wrapper table {
-    min-width: 975px;
+    min-width: 780px;
   }
 
   .member-table .col-action button,
   .wide-table .col-action button {
-    padding: 4px 8px;
+    padding: 2px 4px;
     font-size: 0.75rem;
+  }
+
+  /* extension / absence: ??? ?? ? (??? ??) */
+  .wide-table .col-no,
+  .absence-table .col-no {
+    width: 20px;
+  }
+
+  .wide-table .col-nickname,
+  .absence-table .col-nickname {
+    width: 26px;
+  }
+
+  .wide-table .col-birth,
+  .absence-table .col-birth {
+    width: 23px;
+  }
+
+  .wide-table .col-gender,
+  .absence-table .col-gender {
+    width: 25px;
+  }
+
+  .wide-table .col-region,
+  .absence-table .col-region {
+    width: 25px;
+  }
+
+  .wide-table .col-date,
+  .absence-table .col-date {
+    width: 60px;
+  }
+
+  .wide-table .col-days,
+  .absence-table .col-host {
+    width: 30px;
+  }
+
+  .wide-table .col-status,
+  .absence-table .col-notice {
+    width: 30px;
+  }
+
+  .wide-table .col-action,
+  .absence-table .col-action {
+    width: 34px;
+  }
+
+  .wide-table .input-row th input,
+  .wide-table .input-row th select,
+  .absence-table .input-row th input,
+  .absence-table .input-row th select {
+    height: 32px;
+    font-size: 0.72rem;
+    padding: 0 4px;
+  }
+
+  .wide-table .input-row th button,
+  .absence-table .input-row th button {
+    min-width: 34px;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 0.72rem;
+  }
+
+  .member-table th,
+  .member-table td,
+  .wide-table th,
+  .wide-table td,
+  .absence-table th,
+  .absence-table td {
+    padding: 9px 6px;
+  }
+
+  .member-table .col-nickname { width: 52px; }
+  .member-table .col-birth { width: 58px; }
+  .member-table .col-gender { width: 48px; }
+  .member-table .col-region { width: 62px; }
+  .member-table .col-action { width: 48px; }
+  .member-table .col-no { width: 14px; }
+  .member-table .col-realname { width: 66px; }
+  .member-table .col-status { width: 74px; }
+
+  .member-table .edit-btn,
+  .member-table .del-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+    border-radius: 6px;
+  }
+
+  .table-wrapper {
+    overscroll-behavior-x: contain;
+  }
+
+  .member-table .input-row .col-nickname input { max-width: 56px; margin: 0 auto; }
+  .member-table .input-row .col-birth input { max-width: 52px; margin: 0 auto; }
+  .member-table .input-row .col-gender select { width: 48px; margin: 0 auto; display: block; }
+  .member-table .input-row .col-region input { max-width: 58px; margin: 0 auto; }
+  .member-table .input-row .col-action button {
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    font-size: 0.74rem;
+    padding: 0 6px;
+  }
+
+  /* 모든 페이지: 모바일에서는 No -> N */
+  .member-table th.col-no,
+  .wide-table th.col-no,
+  .absence-table th.col-no {
+    font-size: 0;
+  }
+
+  .member-table th.col-no::after,
+  .wide-table th.col-no::after,
+  .absence-table th.col-no::after {
+    content: "N";
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  #i-gender {
+    display: none;
+  }
+
+  .gender-toggle {
+    display: none;
+  }
+
+  .gender-cycle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .gender-select-native {
+    display: none;
+  }
+
+  .icon-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  .icon-btn svg {
+    width: 12px;
+    height: 12px;
   }
 }
 
 @media (max-width: 640px) {
+  .input-row th input,
+  .input-row th select {
+    font-size: 0.7rem;
+  }
+
+  .input-row input::placeholder {
+    font-size: 0.64rem;
+    letter-spacing: -0.02em;
+  }
   .member-table th,
   .member-table td {
     font-size: 0.75rem;
   }
+
+  .wide-table th,
+  .wide-table td,
+  .absence-table th,
+  .absence-table td {
+    font-size: 0.75rem;
+  }
+
+  .wide-table .input-row th input,
+  .wide-table .input-row th select,
+  .absence-table .input-row th input,
+  .absence-table .input-row th select {
+    font-size: 0.68rem;
+  }
+
+  .member-table .input-row .col-nickname input { max-width: 56px; }
+  .member-table .input-row .col-birth input { max-width: 52px; }
+  .member-table .input-row .col-gender select { width: 48px; }
+  .member-table .input-row .col-region input { max-width: 58px; }
 
   .member-modal__dialog {
     width: 100%;

@@ -1,78 +1,78 @@
 import { showLoading, hideLoading, getAuthHeaders } from "./app.js";
+
+let members = [];
+let absences = [];
+let selectedMember = null;
+let sortState = { key: null, asc: true };
+
 export async function renderAbsences() {
   showLoading();
-  document.getElementById("page-title").innerText = "벙 불참자 관리";
+  document.getElementById("page-title").innerText = "\uBC99 \uBD88\uCC38\uC790 \uAD00\uB9AC";
 
   document.getElementById("page-content").innerHTML = `
     <div class="card">
       <div class="table-wrapper">
         <table class="absence-table">
-        <thead>
-          <tr class="input-row">
-            <th></th>
-            <th style="position:relative">
-              <input id="abs-nickname" placeholder="닉네임" autocomplete="off" />
-              <div id="abs-suggest" class="suggest-box"></div>
-            </th>
-            <th><input id="abs-birth" disabled /></th>
-            <th><input id="abs-gender" disabled /></th>
-            <th><input id="abs-region" disabled /></th>
-            <th><input id="abs-datetime" type="date" /></th>
-            <th><input id="abs-host" placeholder="벙주" /></th>
-            <th>
-              <select id="abs-notice">
-                <option value="">선택</option>
-                <option value="2일전">2일전</option>
-                <option value="1일전">1일전</option>
-                <option value="당일">당일</option>
-              </select>
-            </th>
-            <th>
-              <button id="abs-add-btn">등록</button>
-            </th>
-          </tr>
-          <tr>
-            <th>No</th>
-            <th>닉네임</th>
-            <th>나이</th>
-            <th>성별</th>
-            <th>지역</th>
-            <th>벙 날짜</th>
-            <th>벙주</th>
-            <th>취소통보</th>
-            <th>삭제</th>
-          </tr>
-        </thead>
-        <tbody id="absence-body"></tbody>
+          <thead>
+            <tr class="input-row">
+              <th class="col-no"></th>
+              <th class="col-nickname" style="position:relative">
+                <input id="abs-nickname" placeholder="\uB2C9\uB124\uC784" autocomplete="off" />
+                <div id="abs-suggest" class="suggest-box"></div>
+              </th>
+              <th class="col-birth"><input id="abs-birth" disabled /></th>
+              <th class="col-gender"><input id="abs-gender" disabled /></th>
+              <th class="col-region"><input id="abs-region" disabled /></th>
+              <th class="col-date"><input id="abs-datetime" type="date" /></th>
+              <th class="col-host"><input id="abs-host" placeholder="\uBC99\uC8FC" /></th>
+              <th class="col-notice">
+                <select id="abs-notice">
+                  <option value="">\uC120\uD0DD</option>
+                  <option value="2\uC77C\uC804">2\uC77C\uC804</option>
+                  <option value="1\uC77C\uC804">1\uC77C\uC804</option>
+                  <option value="\uB2F9\uC77C">\uB2F9\uC77C</option>
+                </select>
+              </th>
+              <th class="col-action">
+                <button id="abs-add-btn">\uB4F1\uB85D</button>
+              </th>
+            </tr>
+            <tr>
+              <th class="col-no">No</th>
+              <th class="col-nickname sortable" data-key="nickname" data-label="\uB2C9\uB124\uC784">\uB2C9\uB124\uC784</th>
+              <th class="col-birth sortable" data-key="birth_year" data-label="\uB098\uC774">\uB098\uC774</th>
+              <th class="col-gender sortable" data-key="gender" data-label="\uC131\uBCC4">\uC131\uBCC4</th>
+              <th class="col-region sortable" data-key="region" data-label="\uC9C0\uC5ED">\uC9C0\uC5ED</th>
+              <th class="col-date sortable" data-key="event_datetime" data-label="\uBC99 \uB0A0\uC9DC">\uBC99 \uB0A0\uC9DC</th>
+              <th class="col-host sortable" data-key="host" data-label="\uBC99\uC8FC">\uBC99\uC8FC</th>
+              <th class="col-notice sortable" data-key="notice_time" data-label="\uCDE8\uC18C\uD1B5\uBCF4">\uCDE8\uC18C\uD1B5\uBCF4</th>
+              <th class="col-action">\uC0AD\uC81C</th>
+            </tr>
+          </thead>
+          <tbody id="absence-body"></tbody>
         </table>
       </div>
     </div>
   `;
 
-  /* ===============================
-     데이터 로딩
-  ============================== */
-  let members = [];
-  let absences = [];
   try {
     const [membersRes, absencesRes] = await Promise.all([
       fetch("/.netlify/functions/getMembers"),
       fetch("/.netlify/functions/getAbsences")
     ]);
-    if (!membersRes.ok || !absencesRes.ok) throw new Error("데이터를 불러오지 못했습니다.");
+    if (!membersRes.ok || !absencesRes.ok) {
+      throw new Error("\uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
+    }
     members = await membersRes.json();
     absences = await absencesRes.json();
   } catch (e) {
-    alert(e.message || "오류가 발생했습니다.");
+    alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
   } finally {
     hideLoading();
   }
 
-  let selectedMember = null;
+  selectedMember = null;
 
-  /* ===============================
-     typeahead (extension.js 스타일)
-  ============================== */
   const nicknameInput = document.getElementById("abs-nickname");
   const suggestBox = document.getElementById("abs-suggest");
 
@@ -100,35 +100,16 @@ export async function renderAbsences() {
       });
   });
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", e => {
     if (!nicknameInput.contains(e.target)) {
       suggestBox.innerHTML = "";
     }
   });
 
-  /* ===============================
-     리스트 렌더
-  ============================== */
-  const body = document.getElementById("absence-body");
-  body.innerHTML = absences.map((a, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${escapeHtml(a.nickname)}</td>
-      <td>${escapeHtml(a.birth_year)}</td>
-      <td>${escapeHtml(a.gender)}</td>
-      <td>${escapeHtml(a.region)}</td>
-      <td>${formatDate(a.event_datetime)}</td>
-      <td>${escapeHtml(a.host || "")}</td>
-      <td>${escapeHtml(a.notice_time || "")}</td>
-      <td>
-        <button onclick="deleteAbsence(${a.id})" aria-label="삭제">🗑</button>
-      </td>
-    </tr>
-  `).join("");
+  renderAbsenceTable();
+  bindSortHandlers();
+  updateSortIndicators();
 
-  /* ===============================
-     삭제
-  ============================== */
   window.deleteAbsence = async (id) => {
     showLoading();
     try {
@@ -140,23 +121,21 @@ export async function renderAbsences() {
         },
         body: JSON.stringify({ id })
       });
-      if (!res.ok) throw new Error("삭제에 실패했습니다.");
+      if (!res.ok) throw new Error("\uC0AD\uC81C\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
       await renderAbsences();
     } catch (e) {
-      alert(e.message || "오류가 발생했습니다.");
+      alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
     } finally {
       hideLoading();
     }
   };
 
-  /* ===============================
-     추가 (extension.js 방식 유지)
-  ============================== */
   document.getElementById("abs-add-btn").onclick = async () => {
     if (!selectedMember) {
-      alert("닉네임을 선택하세요");
+      alert("\uB2C9\uB124\uC784\uC744 \uC120\uD0DD\uD558\uC138\uC694.");
       return;
     }
+
     showLoading();
     try {
       const res = await fetch("/.netlify/functions/addAbsence", {
@@ -172,19 +151,81 @@ export async function renderAbsences() {
           notice_time: document.getElementById("abs-notice").value
         })
       });
-      if (!res.ok) throw new Error("등록에 실패했습니다.");
+      if (!res.ok) throw new Error("\uB4F1\uB85D\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.");
       await renderAbsences();
     } catch (e) {
-      alert(e.message || "오류가 발생했습니다.");
+      alert(e.message || "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.");
     } finally {
       hideLoading();
     }
   };
 }
 
-/* ===============================
-   util – 날짜만 표시 (시간 제외)
-================================ */
+function renderAbsenceTable() {
+  const body = document.getElementById("absence-body");
+  const sorted = getSortedAbsences();
+
+  body.innerHTML = sorted.map((a, i) => `
+    <tr>
+      <td class="col-no">${i + 1}</td>
+      <td class="col-nickname">${escapeHtml(a.nickname)}</td>
+      <td class="col-birth">${escapeHtml(a.birth_year)}</td>
+      <td class="col-gender">${escapeHtml(a.gender)}</td>
+      <td class="col-region">${escapeHtml(a.region)}</td>
+      <td class="col-date">${formatDate(a.event_datetime)}</td>
+      <td class="col-host">${escapeHtml(a.host || "")}</td>
+      <td class="col-notice">${escapeHtml(a.notice_time || "")}</td>
+      <td class="col-action"><button class="icon-btn icon-delete" onclick="deleteAbsence(${a.id})" aria-label="\uC0AD\uC81C">${iconDelete()}</button></td>
+    </tr>
+  `).join("");
+}
+
+function bindSortHandlers() {
+  document.querySelectorAll(".absence-table .sortable").forEach(th => {
+    th.onclick = () => sortBy(th.dataset.key);
+  });
+}
+
+function sortBy(key) {
+  sortState.asc = sortState.key === key ? !sortState.asc : true;
+  sortState.key = key;
+  renderAbsenceTable();
+  updateSortIndicators();
+}
+
+function getSortedAbsences() {
+  if (!sortState.key) return [...absences];
+  const key = sortState.key;
+  return [...absences].sort((a, b) => {
+    const left = getSortValue(a, key);
+    const right = getSortValue(b, key);
+    if (left > right) return sortState.asc ? 1 : -1;
+    if (left < right) return sortState.asc ? -1 : 1;
+    return 0;
+  });
+}
+
+function getSortValue(item, key) {
+  if (key === "event_datetime") {
+    const ts = new Date(item.event_datetime).getTime();
+    return Number.isNaN(ts) ? -Infinity : ts;
+  }
+  if (key === "birth_year") {
+    const year = Number(item.birth_year);
+    return Number.isNaN(year) ? -Infinity : year;
+  }
+  return String(item[key] ?? "").toLowerCase();
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll(".absence-table .sortable").forEach(th => {
+    const key = th.dataset.key;
+    const baseLabel = th.dataset.label || th.textContent.trim();
+    const arrow = sortState.key === key ? (sortState.asc ? " \u2191" : " \u2193") : "";
+    th.innerHTML = `${baseLabel}${arrow ? `<span class="sort-arrow">${arrow}</span>` : ""}`;
+  });
+}
+
 function formatDate(dt) {
   if (!dt) return "";
   return String(dt).substring(0, 10);
@@ -197,4 +238,8 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function iconDelete() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7z"/></svg>`;
 }

@@ -11,6 +11,7 @@ export async function handler(event) {
     const {
       id,
       nickname,
+      gender,
       real_name,
       region,
       status,
@@ -31,16 +32,18 @@ export async function handler(event) {
       UPDATE members
       SET
         nickname  = $1,
-        real_name = $2,
-        region    = $3,
-        status    = $4,
-        black     = $5,
-        admin     = $6,
-        memo      = $7
-      WHERE id = $8
+        gender    = $2,
+        real_name = $3,
+        region    = $4,
+        status    = $5,
+        black     = $6,
+        admin     = $7,
+        memo      = $8
+      WHERE id = $9
       `,
       [
         nickname,
+        gender,
         real_name,
         region,
         status,
