@@ -393,10 +393,10 @@ tr.editing {
    [특화] 멤버 테이블 전용 너비 및 예외 정렬
 =================================================== */
 .member-table .col-action { width: 56px; }
-.member-table .col-no     { width: 28px; }
+.member-table .col-no     { width: 40px; }
 .member-table .col-nickname { width: 84px; }
 .member-table .col-birth  { width: 82px; }
-.member-table .col-gender { width: 70px; }
+.member-table .col-gender { width: 92px; }
 .member-table .col-region { width: 92px; }
 .member-table .col-chk    { width: 72px; }  /* 블랙·운영진 + 정렬 화살표 한 줄 표시 */
 .member-table .col-status { width: 92px; }
@@ -1262,20 +1262,14 @@ th.sortable .sort-arrow {
     padding: 0 6px;
   }
 
-  /* 모든 페이지: 모바일에서는 No -> N */
+  /* 모든 페이지: 모바일에서는 No 컬럼 숨김 */
   .member-table th.col-no,
+  .member-table td.col-no,
   .wide-table th.col-no,
-  .absence-table th.col-no {
-    font-size: 0;
-  }
-
-  .member-table th.col-no::after,
-  .wide-table th.col-no::after,
-  .absence-table th.col-no::after {
-    content: "N";
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text-muted);
+  .wide-table td.col-no,
+  .absence-table th.col-no,
+  .absence-table td.col-no {
+    display: none;
   }
 
   #i-gender {
