@@ -257,9 +257,9 @@ window.editMember = (id) => {
     if (field === "status") {
       td.innerHTML = `
         <select>
-          <option>\uD65C\uB3D9</option>
-          <option>\uD734\uBA74</option>
-          <option>\uAC15\uD1F4</option>
+          <option>활동</option>
+          <option>외출</option>
+          <option>강퇴</option>
         </select>`;
       td.querySelector("select").value = value;
     } else if (field === "gender") {
@@ -681,7 +681,7 @@ function ensureMemberModalEditor() {
     <input id="mme-region" placeholder="지역" />
     <select id="mme-status">
       <option>활동</option>
-      <option>휴면</option>
+      <option>외출</option>
       <option>강퇴</option>
     </select>
     <label><input type="checkbox" id="mme-black" /> 블랙</label>
