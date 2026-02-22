@@ -286,6 +286,7 @@ window.editMember = (id) => {
 ========================= */
 async function saveMember(id) {
   const row = document.querySelector(`tr[data-id="${id}"]`);
+  const originalMember = membersCache.find(m => String(m.id) === String(id));
 
   const data = {
     id,
@@ -298,6 +299,15 @@ async function saveMember(id) {
     admin: row.querySelector('[data-field="admin"] input').checked,
     memo: row.querySelector('[data-field="memo"] input').value
   };
+
+  if (hasDuplicateMemberIdentity({
+    nickname: data.nickname,
+    birth_year: originalMember?.birth_year,
+    gender: data.gender
+  }, id)) {
+    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    return;
+  }
 
   showLoading();
   try {
@@ -332,6 +342,11 @@ async function addMember() {
     admin: chk("i-admin"),
     memo: val("i-memo")
   };
+
+  if (hasDuplicateMemberIdentity(data)) {
+    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    return;
+  }
 
   showLoading();
   try {
@@ -754,6 +769,16 @@ async function handleModalEditAction() {
     admin: Boolean(editor.querySelector("#mme-admin")?.checked),
     memo: editor.querySelector("#mme-memo")?.value || ""
   };
+
+  if (hasDuplicateMemberIdentity({
+    nickname: payload.nickname,
+    birth_year: member.birth_year,
+    gender: payload.gender
+  }, member.id)) {
+    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    return;
+  }
+
   showLoading();
   try {
     const res = await fetch("/.netlify/functions/updateMember", {
@@ -864,4 +889,28 @@ function renderAbsenceRecords(list) {
 
 function formatBooleanLabel(value, positive, negative) {
   return value ? positive : negative;
+}
+
+function normalizeIdentityValue(value) {
+  if (value == null) return "";
+  return String(value).trim();
+}
+
+function hasDuplicateMemberIdentity(target, excludeId = null) {
+  const targetNickname = normalizeIdentityValue(target?.nickname).toLowerCase();
+  const targetBirthYear = normalizeIdentityValue(target?.birth_year);
+  const targetGender = normalizeIdentityValue(target?.gender);
+  if (!targetNickname || !targetBirthYear || !targetGender) return false;
+
+  return membersCache.some(member => {
+    if (excludeId != null && String(member.id) === String(excludeId)) return false;
+    const memberNickname = normalizeIdentityValue(member.nickname).toLowerCase();
+    const memberBirthYear = normalizeIdentityValue(member.birth_year);
+    const memberGender = normalizeIdentityValue(member.gender);
+    return (
+      memberNickname === targetNickname &&
+      memberBirthYear === targetBirthYear &&
+      memberGender === targetGender
+    );
+  });
 }
