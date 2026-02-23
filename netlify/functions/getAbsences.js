@@ -23,7 +23,7 @@ export async function handler(event) {
       a.id,
       a.member_id,
       m.nickname,
-      m.birth_year,
+      m.birth_date,
       m.gender,
       m.region,
       a.event_datetime,

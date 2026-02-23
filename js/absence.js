@@ -40,7 +40,7 @@ export async function renderAbsences() {
             <tr>
               <th class="col-no">No</th>
               <th class="col-nickname sortable" data-key="nickname" data-label="\uB2C9\uB124\uC784">\uB2C9\uB124\uC784</th>
-              <th class="col-birth sortable" data-key="birth_year" data-label="\uB098\uC774">\uB098\uC774</th>
+              <th class="col-birth sortable" data-key="birth_date" data-label="\uC0DD\uB144\uC6D4\uC77C">\uC0DD\uB144\uC6D4\uC77C</th>
               <th class="col-gender sortable" data-key="gender" data-label="\uC131\uBCC4">\uC131\uBCC4</th>
               <th class="col-region sortable" data-key="region" data-label="\uC9C0\uC5ED">\uC9C0\uC5ED</th>
               <th class="col-date sortable" data-key="event_datetime" data-label="\uBC99 \uB0A0\uC9DC">\uBC99 \uB0A0\uC9DC</th>
@@ -91,7 +91,7 @@ export async function renderAbsences() {
         div.onclick = () => {
           selectedMember = m;
           nicknameInput.value = m.nickname;
-          document.getElementById("abs-birth").value = m.birth_year;
+          document.getElementById("abs-birth").value = m.birth_date ? String(m.birth_date).substring(0, 10) : "";
           document.getElementById("abs-gender").value = m.gender;
           document.getElementById("abs-region").value = m.region;
           suggestBox.innerHTML = "";
@@ -169,7 +169,7 @@ function renderAbsenceTable() {
     <tr>
       <td class="col-no">${i + 1}</td>
       <td class="col-nickname">${escapeHtml(a.nickname)}</td>
-      <td class="col-birth">${escapeHtml(a.birth_year)}</td>
+      <td class="col-birth">${escapeHtml(a.birth_date ? String(a.birth_date).substring(0, 10) : "")}</td>
       <td class="col-gender">${escapeHtml(a.gender)}</td>
       <td class="col-region">${escapeHtml(a.region)}</td>
       <td class="col-date">${formatDate(a.event_datetime)}</td>
@@ -210,9 +210,9 @@ function getSortValue(item, key) {
     const ts = new Date(item.event_datetime).getTime();
     return Number.isNaN(ts) ? -Infinity : ts;
   }
-  if (key === "birth_year") {
-    const year = Number(item.birth_year);
-    return Number.isNaN(year) ? -Infinity : year;
+  if (key === "birth_date") {
+    const ts = new Date(item.birth_date).getTime();
+    return Number.isNaN(ts) ? -Infinity : ts;
   }
   return String(item[key] ?? "").toLowerCase();
 }

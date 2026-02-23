@@ -17,9 +17,6 @@ function showToast(message) {
 /* =========================
    렌더
 ========================= */
-/* =========================
-   렌더 (수정본)
-========================= */
 export async function renderMembers() {
   document.getElementById("page-title").innerText = "멤버 리스트";
 
@@ -30,7 +27,8 @@ export async function renderMembers() {
           <thead>
             <tr class="input-row">
               <th class="col-action"></th> <th class="col-no"></th>     <th class="col-nickname"><input id="i-nickname" placeholder="닉네임"></th>
-              <th class="col-birth"><input id="i-birth" placeholder="년생"></th>
+              <th class="col-birth"><input id="i-birth" type="date"></th>
+              <th class="col-phone"><input id="i-phone" placeholder="전화번호"></th>
               <th class="col-gender">
                 <select id="i-gender">
                   <option value="">성별</option>
@@ -39,8 +37,6 @@ export async function renderMembers() {
                 </select>
               </th>
               <th class="col-region"><input id="i-region" placeholder="지역"></th>
-              <th class="col-chk"><input type="checkbox" id="i-doc"></th>
-              <th class="col-realname"><input id="i-realname" placeholder="본명"></th>
               <th class="col-status">
                 <select id="i-status">
                   <option>활동</option>
@@ -59,11 +55,10 @@ export async function renderMembers() {
               <th class="col-action"></th>
               <th class="col-no">No</th>
               <th class="col-nickname sortable" data-key="nickname" data-label="닉네임">닉네임</th>
-              <th class="col-birth sortable" data-key="birth_year" data-label="나이">나이</th>
+              <th class="col-birth sortable" data-key="birth_date" data-label="생년월일">생년월일</th>
+              <th class="col-phone" data-key="phone" data-label="전화번호">전화번호</th>
               <th class="col-gender sortable" data-key="gender" data-label="성별">성별</th>
               <th class="col-region sortable" data-key="region" data-label="지역">지역</th>
-              <th class="col-chk sortable" data-key="doc_confirm" data-label="서류">서류</th>
-              <th class="col-realname" data-key="real_name" data-label="본명">본명</th>
               <th class="col-status sortable" data-key="status" data-label="상태">상태</th>
               <th class="col-chk sortable" data-key="black" data-label="블랙">블랙</th>
               <th class="col-chk sortable" data-key="admin" data-label="운영진">운영진</th>
@@ -92,8 +87,12 @@ export async function renderMembers() {
         <div class="member-modal__content">
           <div class="member-modal__grid">
             <div class="member-modal__pair">
-              <span class="member-modal__label">생년</span>
-              <span class="member-modal__value" data-member-field="birth_year"></span>
+              <span class="member-modal__label">생년월일</span>
+              <span class="member-modal__value" data-member-field="birth_date"></span>
+            </div>
+            <div class="member-modal__pair">
+              <span class="member-modal__label">전화번호</span>
+              <span class="member-modal__value" data-member-field="phone"></span>
             </div>
             <div class="member-modal__pair">
               <span class="member-modal__label">성별</span>
@@ -106,10 +105,6 @@ export async function renderMembers() {
             <div class="member-modal__pair">
               <span class="member-modal__label">상태</span>
               <span class="member-modal__value" data-member-field="status"></span>
-            </div>
-            <div class="member-modal__pair">
-              <span class="member-modal__label">서류확인</span>
-              <span class="member-modal__value" data-member-field="doc_confirm"></span>
             </div>
             <div class="member-modal__pair">
               <span class="member-modal__label">블랙리스트</span>
@@ -177,9 +172,7 @@ async function loadMembers() {
 
 /* =========================
    테이블 렌더
-   modified by mslim on 2026-02-20
-   added editable data-field="real_name"
-   ========================= */
+========================= */
 function renderTable(list) {
   const body = document.getElementById("member-body");
   body.innerHTML = list.map((m, i) => `
@@ -189,11 +182,10 @@ function renderTable(list) {
       </td>
       <td class="col-no">${i + 1}</td>
       <td class="col-nickname editable" data-field="nickname">${escapeHtml(m.nickname)}</td>
-      <td class="col-birth">${escapeHtml(m.birth_year)}</td>
+      <td class="col-birth">${escapeHtml(m.birth_date ? String(m.birth_date).substring(0, 10) : "")}</td>
+      <td class="col-phone editable" data-field="phone">${escapeHtml(m.phone || "")}</td>
       <td class="col-gender editable" data-field="gender">${escapeHtml(m.gender)}</td>
       <td class="col-region editable" data-field="region">${escapeHtml(m.region || "")}</td>
-      <td class="col-chk center">${m.doc_confirm ? "✔" : ""}</td>
-      <td class="col-realname editable" data-field="real_name">${escapeHtml(m.real_name || "")}</td>
       <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
       <td class="col-chk editable center" data-field="black">${m.black ? iconBlackCard() : ""}</td>
       <td class="col-chk editable center" data-field="admin">${m.admin ? iconAdminUser() : ""}</td>
@@ -206,6 +198,7 @@ function renderTable(list) {
     </tr>
   `).join("");
 }
+
 /* =========================
    정렬
 ========================= */
@@ -241,7 +234,7 @@ function updateSortIndicators() {
 ========================= */
 window.editMember = (id) => {
   if (editingId && editingId !== id) {
-    alert("\uB2E4\uB978 \uBA64\uBC84\uB97C \uC218\uC815 \uC911\uC785\uB2C8\uB2E4. \uBA3C\uC800 \uC800\uC7A5\uD574\uC8FC\uC138\uC694.");
+    alert("\uD2E4\uB978 \uBA64\uBC84\uB97C \uC218\uC815 \uC911\uC785\uB2C8\uB2E4. \uBA3C\uC800 \uC800\uC7A5\uD574\uC8FC\uC138\uC694.");
     return;
   }
 
@@ -291,8 +284,9 @@ async function saveMember(id) {
   const data = {
     id,
     nickname: row.querySelector('[data-field="nickname"] input').value,
+    birth_date: originalMember?.birth_date,
+    phone: row.querySelector('[data-field="phone"] input').value,
     gender: getGenderFieldValue(row.querySelector('[data-field="gender"]')),
-    real_name: row.querySelector('[data-field="real_name"] input').value,
     region: row.querySelector('[data-field="region"] input').value,
     status: row.querySelector('[data-field="status"] select').value,
     black: row.querySelector('[data-field="black"] input').checked,
@@ -302,10 +296,10 @@ async function saveMember(id) {
 
   if (hasDuplicateMemberIdentity({
     nickname: data.nickname,
-    birth_year: originalMember?.birth_year,
+    birth_date: originalMember?.birth_date,
     gender: data.gender
   }, id)) {
-    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    showToast("동일한 닉네임/생년월일/성별 조합은 등록할 수 없습니다.");
     return;
   }
 
@@ -332,11 +326,10 @@ async function saveMember(id) {
 async function addMember() {
   const data = {
     nickname: val("i-nickname"),
-    birth_year: val("i-birth"),
+    birth_date: val("i-birth"),
+    phone: val("i-phone"),
     gender: val("i-gender"),
     region: val("i-region"),
-    doc_confirm: chk("i-doc"),
-    real_name: val("i-realname"),
     status: val("i-status"),
     black: chk("i-black"),
     admin: chk("i-admin"),
@@ -344,7 +337,7 @@ async function addMember() {
   };
 
   if (hasDuplicateMemberIdentity(data)) {
-    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    showToast("동일한 닉네임/생년월일/성별 조합은 등록할 수 없습니다.");
     return;
   }
 
@@ -540,9 +533,9 @@ function setupResponsiveInputLabels() {
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
   const pairs = [
     ["i-nickname", "닉네임", "닉"],
-    ["i-birth", "년생", "생"],
+    ["i-birth", "생년월일", "생일"],
+    ["i-phone", "전화번호", "전화"],
     ["i-region", "지역", "지"],
-    ["i-realname", "이름", "이름"],
     ["i-memo", "메모", "메"]
   ];
   pairs.forEach(([id, full, compact]) => {
@@ -655,8 +648,8 @@ function updateMemberModalInfo(member) {
   detailModal.querySelectorAll("[data-member-field]").forEach(el => {
     const field = el.dataset.memberField;
     let value = member[field];
-    if (field === "doc_confirm") {
-      value = formatBooleanLabel(member.doc_confirm, "완료", "미완료");
+    if (field === "birth_date") {
+      value = member.birth_date ? String(member.birth_date).substring(0, 10) : "-";
     } else if (field === "black") {
       value = formatBooleanLabel(member.black, "예", "아니오");
     } else if (field === "admin") {
@@ -689,6 +682,8 @@ function ensureMemberModalEditor() {
   editor.className = "member-modal__editor hidden";
   editor.innerHTML = `
     <input id="mme-nickname" placeholder="닉네임" />
+    <input type="date" id="mme-birth-date" />
+    <input id="mme-phone" placeholder="전화번호" />
     <select id="mme-gender">
       <option value="남">남</option>
       <option value="여">여</option>
@@ -725,6 +720,8 @@ function populateModalEditor(member) {
   const editor = ensureMemberModalEditor();
   if (!editor || !member) return;
   const nickname = editor.querySelector("#mme-nickname");
+  const birthDate = editor.querySelector("#mme-birth-date");
+  const phone = editor.querySelector("#mme-phone");
   const gender = editor.querySelector("#mme-gender");
   const region = editor.querySelector("#mme-region");
   const status = editor.querySelector("#mme-status");
@@ -732,6 +729,8 @@ function populateModalEditor(member) {
   const admin = editor.querySelector("#mme-admin");
   const memo = editor.querySelector("#mme-memo");
   if (nickname) nickname.value = member.nickname || "";
+  if (birthDate) birthDate.value = member.birth_date ? String(member.birth_date).substring(0, 10) : "";
+  if (phone) phone.value = member.phone || "";
   if (gender) gender.value = member.gender || "남";
   if (region) region.value = member.region || "";
   if (status) status.value = member.status || "활동";
@@ -761,8 +760,9 @@ async function handleModalEditAction() {
   const payload = {
     id: member.id,
     nickname: editor.querySelector("#mme-nickname")?.value || "",
+    birth_date: editor.querySelector("#mme-birth-date")?.value || "",
+    phone: editor.querySelector("#mme-phone")?.value || "",
     gender: editor.querySelector("#mme-gender")?.value || "남",
-    real_name: member.real_name || "",
     region: editor.querySelector("#mme-region")?.value || "",
     status: editor.querySelector("#mme-status")?.value || "활동",
     black: Boolean(editor.querySelector("#mme-black")?.checked),
@@ -772,10 +772,10 @@ async function handleModalEditAction() {
 
   if (hasDuplicateMemberIdentity({
     nickname: payload.nickname,
-    birth_year: member.birth_year,
+    birth_date: payload.birth_date,
     gender: payload.gender
   }, member.id)) {
-    showToast("동일한 닉네임/나이/성별 조합은 등록할 수 없습니다.");
+    showToast("동일한 닉네임/생년월일/성별 조합은 등록할 수 없습니다.");
     return;
   }
 
@@ -898,18 +898,18 @@ function normalizeIdentityValue(value) {
 
 function hasDuplicateMemberIdentity(target, excludeId = null) {
   const targetNickname = normalizeIdentityValue(target?.nickname).toLowerCase();
-  const targetBirthYear = normalizeIdentityValue(target?.birth_year);
+  const targetBirthDate = normalizeIdentityValue(target?.birth_date);
   const targetGender = normalizeIdentityValue(target?.gender);
-  if (!targetNickname || !targetBirthYear || !targetGender) return false;
+  if (!targetNickname || !targetBirthDate || !targetGender) return false;
 
   return membersCache.some(member => {
     if (excludeId != null && String(member.id) === String(excludeId)) return false;
     const memberNickname = normalizeIdentityValue(member.nickname).toLowerCase();
-    const memberBirthYear = normalizeIdentityValue(member.birth_year);
+    const memberBirthDate = normalizeIdentityValue(member.birth_date);
     const memberGender = normalizeIdentityValue(member.gender);
     return (
       memberNickname === targetNickname &&
-      memberBirthYear === targetBirthYear &&
+      memberBirthDate === targetBirthDate &&
       memberGender === targetGender
     );
   });

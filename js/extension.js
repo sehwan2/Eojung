@@ -30,7 +30,7 @@ export async function renderExtensions() {
             <tr>
               <th class="col-no">No</th>
               <th class="col-nickname sortable" data-key="nickname" data-label="\uB2C9\uB124\uC784">\uB2C9\uB124\uC784</th>
-              <th class="col-birth sortable" data-key="birth_year" data-label="\uB098\uC774">\uB098\uC774</th>
+              <th class="col-birth sortable" data-key="birth_date" data-label="\uC0DD\uB144\uC6D4\uC77C">\uC0DD\uB144\uC6D4\uC77C</th>
               <th class="col-gender sortable" data-key="gender" data-label="\uC131\uBCC4">\uC131\uBCC4</th>
               <th class="col-region sortable" data-key="region" data-label="\uC9C0\uC5ED">\uC9C0\uC5ED</th>
               <th class="col-date sortable" data-key="enter_date" data-label="\uC785\uC7A5 \uB0A0\uC9DC">\uC785\uC7A5 \uB0A0\uC9DC</th>
@@ -83,7 +83,7 @@ function renderTable() {
     <tr>
       <td class="col-no">${i + 1}</td>
       <td class="col-nickname">${escapeHtml(e.nickname)}</td>
-      <td class="col-birth">${escapeHtml(e.birth_year)}</td>
+      <td class="col-birth">${escapeHtml(e.birth_date ? String(e.birth_date).substring(0, 10) : "")}</td>
       <td class="col-gender">${escapeHtml(e.gender)}</td>
       <td class="col-region">${escapeHtml(e.region)}</td>
       <td class="col-date">${formatDate(e.enter_date)}</td>
@@ -133,9 +133,9 @@ function getSortValue(item, key) {
     const days = computeDaysSince(item.enter_date);
     return days == null ? -Infinity : days;
   }
-  if (key === "birth_year") {
-    const year = Number(item.birth_year);
-    return Number.isNaN(year) ? -Infinity : year;
+  if (key === "birth_date") {
+    const ts = new Date(item.birth_date).getTime();
+    return Number.isNaN(ts) ? -Infinity : ts;
   }
   return String(item[key] ?? "").toLowerCase();
 }
@@ -172,7 +172,7 @@ function selectMember(m) {
   selectedMember = m;
 
   document.getElementById("e-nickname").value = m.nickname;
-  document.getElementById("e-birth").value = m.birth_year;
+  document.getElementById("e-birth").value = m.birth_date ? String(m.birth_date).substring(0, 10) : "";
   document.getElementById("e-gender").value = m.gender;
   document.getElementById("e-region").value = m.region;
 
