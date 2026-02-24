@@ -119,6 +119,7 @@ export async function renderMembers() {
             <span class="member-modal__label">메모</span>
             <p class="member-modal__value" data-member-field="memo"></p>
           </div>
+          <!-- 날떼 연장 기록/불참 기록 - 임시 Hide
           <section class="member-modal__section">
             <div class="member-modal__section-head">
               <h3>날떼 연장 기록</h3>
@@ -131,6 +132,7 @@ export async function renderMembers() {
             </div>
             <div id="member-absences" class="member-modal__records"></div>
           </section>
+          -->
         </div>
       </div>
     </div>
