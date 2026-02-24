@@ -26,7 +26,7 @@ export async function renderMembers() {
         <table class="member-table">
           <thead>
             <tr class="input-row">
-              <th class="col-action"></th> <th class="col-no"></th>     <th class="col-nickname"><input id="i-nickname" placeholder="닉네임"></th>
+              <th class="col-action"></th> <th class="col-no"></th>     <th class="col-nickname"><input id="i-nickname" placeholder="이름"></th>
               <th class="col-birth"><input id="i-birth" type="date"></th>
               <th class="col-phone"><input id="i-phone" placeholder="전화번호"></th>
               <th class="col-gender">
@@ -54,7 +54,7 @@ export async function renderMembers() {
             <tr class="header-row">
               <th class="col-action"></th>
               <th class="col-no">No</th>
-              <th class="col-nickname sortable" data-key="nickname" data-label="닉네임">닉네임</th>
+              <th class="col-nickname sortable" data-key="nickname" data-label="이름">이름</th>
               <th class="col-birth sortable" data-key="birth_date" data-label="생년월일">생년월일</th>
               <th class="col-phone" data-key="phone" data-label="전화번호">전화번호</th>
               <th class="col-gender sortable" data-key="gender" data-label="성별">성별</th>
@@ -532,7 +532,7 @@ function setupAddGenderToggle() {
 function setupResponsiveInputLabels() {
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
   const pairs = [
-    ["i-nickname", "닉네임", "닉"],
+    ["i-nickname", "이름", "이름"],
     ["i-birth", "생년월일", "생일"],
     ["i-phone", "전화번호", "전화"],
     ["i-region", "지역", "지"],
@@ -681,7 +681,7 @@ function ensureMemberModalEditor() {
   editor.id = "member-modal-editor";
   editor.className = "member-modal__editor hidden";
   editor.innerHTML = `
-    <input id="mme-nickname" placeholder="닉네임" />
+    <input id="mme-nickname" placeholder="이름" />
     <input type="date" id="mme-birth-date" />
     <input id="mme-phone" placeholder="전화번호" />
     <select id="mme-gender">

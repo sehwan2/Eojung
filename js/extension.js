@@ -16,7 +16,7 @@ export async function renderExtensions() {
             <tr class="input-row">
               <th class="col-no"></th>
               <th class="col-nickname">
-                <input id="e-nickname" placeholder="\uB2C9\uB124\uC784" autocomplete="off">
+                <input id="e-nickname" placeholder="이름" autocomplete="off">
                 <div id="nickname-suggest" class="suggest-box"></div>
               </th>
               <th class="col-birth"><input id="e-birth" disabled></th>
@@ -29,7 +29,7 @@ export async function renderExtensions() {
             </tr>
             <tr>
               <th class="col-no">No</th>
-              <th class="col-nickname sortable" data-key="nickname" data-label="\uB2C9\uB124\uC784">\uB2C9\uB124\uC784</th>
+              <th class="col-nickname sortable" data-key="nickname" data-label="이름">이름</th>
               <th class="col-birth sortable" data-key="birth_date" data-label="\uC0DD\uB144\uC6D4\uC77C">\uC0DD\uB144\uC6D4\uC77C</th>
               <th class="col-gender sortable" data-key="gender" data-label="\uC131\uBCC4">\uC131\uBCC4</th>
               <th class="col-region sortable" data-key="region" data-label="\uC9C0\uC5ED">\uC9C0\uC5ED</th>
