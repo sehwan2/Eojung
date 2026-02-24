@@ -18,6 +18,58 @@ function showToast(message) {
 }
 
 /* =========================
+   시/분 옵션 HTML 생성
+========================= */
+function hourOptions(selected = "00") {
+  return Array.from({ length: 24 }, (_, i) => {
+    const val = String(i).padStart(2, "0");
+    return `<option value="${val}"${val === selected ? " selected" : ""}>${val}</option>`;
+  }).join("");
+}
+
+function minuteOptions(selected = "00") {
+  return [0, 10, 20, 30, 40, 50].map(m => {
+    const val = String(m).padStart(2, "0");
+    return `<option value="${val}"${val === selected ? " selected" : ""}>${val}</option>`;
+  }).join("");
+}
+
+/* =========================
+   KST 날짜/시간 유틸
+========================= */
+// 날짜+시+분 → KST ISO 문자열 (서버에 +09:00 명시)
+function getDatetimeKST(dateId, hourId, minuteId) {
+  const date = document.getElementById(dateId)?.value;
+  const hour = document.getElementById(hourId)?.value ?? "00";
+  const minute = document.getElementById(minuteId)?.value ?? "00";
+  if (!date) return null;
+  return `${date}T${hour}:${minute}:00+09:00`;
+}
+
+// UTC ISO 값 → KST 날짜/시/분 필드에 채우기
+function setDatetimeKSTFields(dateId, hourId, minuteId, val) {
+  if (!val) return;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return;
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  // 분은 10분 단위로 반올림
+  const rawMin = d.getMinutes();
+  const roundedMin = String(Math.round(rawMin / 10) * 10 % 60).padStart(2, "0");
+
+  const dateEl = document.getElementById(dateId);
+  const hourEl = document.getElementById(hourId);
+  const minuteEl = document.getElementById(minuteId);
+
+  if (dateEl) dateEl.value = `${yyyy}-${mm}-${dd}`;
+  if (hourEl) hourEl.value = hh;
+  if (minuteEl) minuteEl.value = roundedMin;
+}
+
+/* =========================
    렌더
 ========================= */
 export async function renderEvents() {
@@ -44,7 +96,13 @@ export async function renderEvents() {
 
         <div class="event-form__field">
           <label class="event-form__label">날짜/시간</label>
-          <input id="ev-datetime" class="event-form__input" type="datetime-local" />
+          <div class="datetime-wrap">
+            <input id="ev-date" class="event-form__input datetime-date" type="date" />
+            <select id="ev-hour" class="event-form__select">${hourOptions()}</select>
+            <span class="datetime-sep">시</span>
+            <select id="ev-minute" class="event-form__select">${minuteOptions()}</select>
+            <span class="datetime-sep">분</span>
+          </div>
         </div>
 
         <div class="event-form__field">
@@ -115,7 +173,13 @@ export async function renderEvents() {
 
             <div class="event-form__field">
               <label class="event-form__label">날짜/시간</label>
-              <input id="edit-ev-datetime" class="event-form__input" type="datetime-local" />
+              <div class="datetime-wrap">
+                <input id="edit-ev-date" class="event-form__input datetime-date" type="date" />
+                <select id="edit-ev-hour" class="event-form__select">${hourOptions()}</select>
+                <span class="datetime-sep">시</span>
+                <select id="edit-ev-minute" class="event-form__select">${minuteOptions()}</select>
+                <span class="datetime-sep">분</span>
+              </div>
             </div>
 
             <div class="event-form__field">
@@ -346,10 +410,10 @@ window.openEditEvent = (id) => {
     : [];
 
   document.getElementById("edit-ev-title").value = ev.title || "";
-  document.getElementById("edit-ev-datetime").value = ev.event_datetime
-    ? ev.event_datetime.substring(0, 16)
-    : "";
   document.getElementById("edit-ev-location").value = ev.location || "";
+
+  // KST 기준으로 날짜/시/분 채우기
+  setDatetimeKSTFields("edit-ev-date", "edit-ev-hour", "edit-ev-minute", ev.event_datetime);
 
   renderEditHostSelected();
   renderEditAttendeeChips();
@@ -376,7 +440,7 @@ function closeEditModal() {
 
 async function saveEditEvent() {
   const title = document.getElementById("edit-ev-title")?.value.trim();
-  const datetime = document.getElementById("edit-ev-datetime")?.value;
+  const datetime = getDatetimeKST("edit-ev-date", "edit-ev-hour", "edit-ev-minute");
   const location = document.getElementById("edit-ev-location")?.value.trim();
 
   if (!title) { showToast("벙제를 입력해주세요."); return; }
@@ -411,7 +475,7 @@ async function saveEditEvent() {
 ========================= */
 async function addEvent() {
   const title = document.getElementById("ev-title")?.value.trim();
-  const datetime = document.getElementById("ev-datetime")?.value;
+  const datetime = getDatetimeKST("ev-date", "ev-hour", "ev-minute");
   const location = document.getElementById("ev-location")?.value.trim();
 
   if (!title) { showToast("벙제를 입력해주세요."); return; }
@@ -433,7 +497,9 @@ async function addEvent() {
     showToast("벙이 등록되었습니다 ✅");
 
     document.getElementById("ev-title").value = "";
-    document.getElementById("ev-datetime").value = "";
+    document.getElementById("ev-date").value = "";
+    document.getElementById("ev-hour").value = "00";
+    document.getElementById("ev-minute").value = "00";
     document.getElementById("ev-location").value = "";
     selectedHost = null;
     selectedAttendees = [];
