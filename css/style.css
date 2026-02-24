@@ -395,9 +395,10 @@ tr.editing {
 .member-table .col-action { width: 56px; }
 .member-table .col-no     { width: 40px; }
 .member-table .col-nickname { width: 84px; }
-.member-table .col-birth  { width: 82px; }
+.member-table .col-birth  { width: 112px; }
+.member-table .col-phone  { width: 108px; }
 .member-table .col-gender { width: 92px; }
-.member-table .col-region { width: 92px; }
+.member-table .col-region { width: 110px; }
 .member-table .col-chk    { width: 72px; }  /* 블랙·운영진 + 정렬 화살표 한 줄 표시 */
 .member-table .col-status { width: 92px; }
 .member-table .col-realname { width: 92px; }
@@ -1230,9 +1231,10 @@ th.sortable .sort-arrow {
   }
 
   .member-table .col-nickname { width: 52px; }
-  .member-table .col-birth { width: 58px; }
+  .member-table .col-birth { width: 88px; }
+  .member-table .col-phone { width: 90px; }
   .member-table .col-gender { width: 48px; }
-  .member-table .col-region { width: 62px; }
+  .member-table .col-region { width: 72px; }
   .member-table .col-action { width: 48px; }
   .member-table .col-no { width: 14px; }
   .member-table .col-realname { width: 66px; }
@@ -1251,7 +1253,8 @@ th.sortable .sort-arrow {
   }
 
   .member-table .input-row .col-nickname input { max-width: 56px; margin: 0 auto; }
-  .member-table .input-row .col-birth input { max-width: 52px; margin: 0 auto; }
+  .member-table .input-row .col-birth input { max-width: 88px; margin: 0 auto; }
+  .member-table .input-row .col-phone input { max-width: 90px; margin: 0 auto; }
   .member-table .input-row .col-gender select { width: 48px; margin: 0 auto; display: block; }
   .member-table .input-row .col-region input { max-width: 58px; margin: 0 auto; }
   .member-table .input-row .col-action button {
