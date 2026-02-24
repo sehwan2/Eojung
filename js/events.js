@@ -3,7 +3,12 @@ import { showLoading, hideLoading, getAuthHeaders } from "./app.js";
 let members = [];
 let events = [];
 let selectedHost = null;
-let selectedAttendees = []; // [{ id, nickname }]
+let selectedAttendees = [];
+
+// 수정 모달 상태
+let editEventId = null;
+let editSelectedHost = null;
+let editSelectedAttendees = [];
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -49,6 +54,7 @@ export async function renderEvents() {
 
         <div class="event-form__field event-form__field--full">
           <label class="event-form__label">참석자</label>
+          <p class="event-form__notice">⚠️ 벙주도 참석자로 별도 등록해주세요.</p>
           <div class="member-search-wrap">
             <input id="ev-attendee-input" class="event-form__input" placeholder="이름 검색 후 선택" autocomplete="off" />
             <div id="ev-attendee-suggest" class="suggest-box"></div>
@@ -73,11 +79,66 @@ export async function renderEvents() {
               <th class="col-ev-datetime">날짜/시간</th>
               <th class="col-ev-location">장소</th>
               <th class="col-ev-attendees">참석자</th>
+              <th class="col-action">수정</th>
               <th class="col-action">삭제</th>
             </tr>
           </thead>
           <tbody id="event-body"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div id="event-edit-modal" class="event-modal hidden" aria-hidden="true">
+      <div class="event-modal__backdrop" id="event-modal-backdrop"></div>
+      <div class="event-modal__dialog">
+        <div class="event-modal__header">
+          <h3>벙 수정</h3>
+          <button type="button" class="event-modal__close" id="event-modal-close">×</button>
+        </div>
+        <div class="event-modal__body">
+          <div class="event-form">
+
+            <div class="event-form__field">
+              <label class="event-form__label">벙제</label>
+              <input id="edit-ev-title" class="event-form__input" placeholder="벙 이름" />
+            </div>
+
+            <div class="event-form__field">
+              <label class="event-form__label">벙주</label>
+              <div class="member-search-wrap">
+                <input id="edit-ev-host-input" class="event-form__input" placeholder="이름 검색" autocomplete="off" />
+                <div id="edit-ev-host-suggest" class="suggest-box"></div>
+                <div id="edit-ev-host-selected" class="selected-single"></div>
+              </div>
+            </div>
+
+            <div class="event-form__field">
+              <label class="event-form__label">날짜/시간</label>
+              <input id="edit-ev-datetime" class="event-form__input" type="datetime-local" />
+            </div>
+
+            <div class="event-form__field">
+              <label class="event-form__label">장소</label>
+              <input id="edit-ev-location" class="event-form__input" placeholder="장소" />
+            </div>
+
+            <div class="event-form__field event-form__field--full">
+              <label class="event-form__label">참석자</label>
+              <p class="event-form__notice">⚠️ 벙주도 참석자로 별도 등록해주세요.</p>
+              <div class="member-search-wrap">
+                <input id="edit-ev-attendee-input" class="event-form__input" placeholder="이름 검색 후 선택" autocomplete="off" />
+                <div id="edit-ev-attendee-suggest" class="suggest-box"></div>
+                <div id="edit-ev-attendee-chips" class="chip-list"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="event-modal__footer">
+          <button type="button" id="edit-ev-cancel-btn" class="event-modal__btn event-modal__btn--cancel">취소</button>
+          <button type="button" id="edit-ev-save-btn" class="event-modal__btn event-modal__btn--save">저장</button>
+        </div>
       </div>
     </div>
   `;
@@ -87,9 +148,10 @@ export async function renderEvents() {
 
   await Promise.all([loadMembers(), loadEvents()]);
 
-  setupHostSearch();
-  setupAttendeeSearch();
+  setupHostSearch("ev-host-input", "ev-host-suggest", "ev-host-selected", false);
+  setupAttendeeSearch("ev-attendee-input", "ev-attendee-suggest", "ev-attendee-chips", false);
   document.getElementById("ev-add-btn").onclick = addEvent;
+  setupEditModal();
 }
 
 /* =========================
@@ -99,9 +161,7 @@ async function loadMembers() {
   try {
     const res = await fetch("/.netlify/functions/getMembers");
     if (res.ok) members = await res.json();
-  } catch (_) {
-    members = [];
-  }
+  } catch (_) { members = []; }
 }
 
 async function loadEvents() {
@@ -126,7 +186,7 @@ function renderTable() {
   if (!body) return;
 
   if (!events.length) {
-    body.innerHTML = `<tr><td colspan="7" class="empty-row">등록된 벙이 없습니다.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" class="empty-row">등록된 벙이 없습니다.</td></tr>`;
     return;
   }
 
@@ -143,6 +203,9 @@ function renderTable() {
         <td class="col-ev-location">${escapeHtml(ev.location || "-")}</td>
         <td class="col-ev-attendees" title="${attendeeText}">${attendeeText}</td>
         <td class="col-action">
+          <button class="icon-btn icon-edit" onclick="openEditEvent(${ev.id})" aria-label="수정">${iconEdit()}</button>
+        </td>
+        <td class="col-action">
           <button class="icon-btn icon-delete" onclick="deleteEvent(${ev.id})" aria-label="삭제">${iconDelete()}</button>
         </td>
       </tr>
@@ -151,12 +214,11 @@ function renderTable() {
 }
 
 /* =========================
-   벙주 검색
+   멤버 검색 공통
 ========================= */
-function setupHostSearch() {
-  const input = document.getElementById("ev-host-input");
-  const suggest = document.getElementById("ev-host-suggest");
-  const selected = document.getElementById("ev-host-selected");
+function setupHostSearch(inputId, suggestId, selectedId, isEdit) {
+  const input = document.getElementById(inputId);
+  const suggest = document.getElementById(suggestId);
   if (!input) return;
 
   input.addEventListener("input", () => {
@@ -164,96 +226,185 @@ function setupHostSearch() {
     suggest.innerHTML = "";
     if (!keyword) return;
 
-    const filtered = members.filter(m => m.nickname.includes(keyword)).slice(0, 8);
-    filtered.forEach(m => {
+    members.filter(m => m.nickname.includes(keyword)).slice(0, 8).forEach(m => {
       const div = document.createElement("div");
       div.textContent = m.nickname;
       div.onclick = () => {
-        selectedHost = m;
+        if (isEdit) { editSelectedHost = m; renderEditHostSelected(); }
+        else { selectedHost = m; renderHostSelected(); }
         input.value = "";
         suggest.innerHTML = "";
-        renderHostSelected();
       };
       suggest.appendChild(div);
     });
   });
 
   document.addEventListener("click", e => {
-    if (!input.contains(e.target) && !suggest.contains(e.target)) {
-      suggest.innerHTML = "";
-    }
+    if (!input.contains(e.target) && !suggest.contains(e.target)) suggest.innerHTML = "";
   });
 }
 
+function setupAttendeeSearch(inputId, suggestId, chipsId, isEdit) {
+  const input = document.getElementById(inputId);
+  const suggest = document.getElementById(suggestId);
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    const keyword = input.value.trim();
+    suggest.innerHTML = "";
+    if (!keyword) return;
+
+    const current = isEdit ? editSelectedAttendees : selectedAttendees;
+    members
+      .filter(m => m.nickname.includes(keyword) && !current.find(a => a.id === m.id))
+      .slice(0, 8)
+      .forEach(m => {
+        const div = document.createElement("div");
+        div.textContent = m.nickname;
+        div.onclick = () => {
+          if (isEdit) { editSelectedAttendees.push({ id: m.id, nickname: m.nickname }); renderEditAttendeeChips(); }
+          else { selectedAttendees.push({ id: m.id, nickname: m.nickname }); renderAttendeeChips(); }
+          input.value = "";
+          suggest.innerHTML = "";
+        };
+        suggest.appendChild(div);
+      });
+  });
+
+  document.addEventListener("click", e => {
+    if (!input.contains(e.target) && !suggest.contains(e.target)) suggest.innerHTML = "";
+  });
+}
+
+/* =========================
+   추가 폼 - 선택 렌더
+========================= */
 function renderHostSelected() {
   const el = document.getElementById("ev-host-selected");
   if (!el) return;
-  if (!selectedHost) { el.innerHTML = ""; return; }
-  el.innerHTML = `
-    <span class="chip">
-      ${escapeHtml(selectedHost.nickname)}
-      <button type="button" class="chip-remove" onclick="clearHost()">×</button>
-    </span>
-  `;
+  el.innerHTML = selectedHost
+    ? `<span class="chip">${escapeHtml(selectedHost.nickname)}<button type="button" class="chip-remove" onclick="clearHost()">×</button></span>`
+    : "";
 }
-
-window.clearHost = () => {
-  selectedHost = null;
-  renderHostSelected();
-};
-
-/* =========================
-   참석자 검색 (멀티)
-========================= */
-function setupAttendeeSearch() {
-  const input = document.getElementById("ev-attendee-input");
-  const suggest = document.getElementById("ev-attendee-suggest");
-  if (!input) return;
-
-  input.addEventListener("input", () => {
-    const keyword = input.value.trim();
-    suggest.innerHTML = "";
-    if (!keyword) return;
-
-    const filtered = members
-      .filter(m => m.nickname.includes(keyword) && !selectedAttendees.find(a => a.id === m.id))
-      .slice(0, 8);
-
-    filtered.forEach(m => {
-      const div = document.createElement("div");
-      div.textContent = m.nickname;
-      div.onclick = () => {
-        selectedAttendees.push({ id: m.id, nickname: m.nickname });
-        input.value = "";
-        suggest.innerHTML = "";
-        renderAttendeeChips();
-      };
-      suggest.appendChild(div);
-    });
-  });
-
-  document.addEventListener("click", e => {
-    if (!input.contains(e.target) && !suggest.contains(e.target)) {
-      suggest.innerHTML = "";
-    }
-  });
-}
+window.clearHost = () => { selectedHost = null; renderHostSelected(); };
 
 function renderAttendeeChips() {
   const wrap = document.getElementById("ev-attendee-chips");
   if (!wrap) return;
-  wrap.innerHTML = selectedAttendees.map(a => `
-    <span class="chip">
-      ${escapeHtml(a.nickname)}
-      <button type="button" class="chip-remove" onclick="removeAttendee(${a.id})">×</button>
-    </span>
-  `).join("");
+  wrap.innerHTML = selectedAttendees.map(a =>
+    `<span class="chip">${escapeHtml(a.nickname)}<button type="button" class="chip-remove" onclick="removeAttendee(${a.id})">×</button></span>`
+  ).join("");
+}
+window.removeAttendee = (id) => { selectedAttendees = selectedAttendees.filter(a => a.id !== id); renderAttendeeChips(); };
+
+/* =========================
+   수정 모달 - 선택 렌더
+========================= */
+function renderEditHostSelected() {
+  const el = document.getElementById("edit-ev-host-selected");
+  if (!el) return;
+  el.innerHTML = editSelectedHost
+    ? `<span class="chip">${escapeHtml(editSelectedHost.nickname)}<button type="button" class="chip-remove" onclick="clearEditHost()">×</button></span>`
+    : "";
+}
+window.clearEditHost = () => { editSelectedHost = null; renderEditHostSelected(); };
+
+function renderEditAttendeeChips() {
+  const wrap = document.getElementById("edit-ev-attendee-chips");
+  if (!wrap) return;
+  wrap.innerHTML = editSelectedAttendees.map(a =>
+    `<span class="chip">${escapeHtml(a.nickname)}<button type="button" class="chip-remove" onclick="removeEditAttendee(${a.id})">×</button></span>`
+  ).join("");
+}
+window.removeEditAttendee = (id) => { editSelectedAttendees = editSelectedAttendees.filter(a => a.id !== id); renderEditAttendeeChips(); };
+
+/* =========================
+   수정 모달
+========================= */
+function setupEditModal() {
+  const modal = document.getElementById("event-edit-modal");
+  document.getElementById("event-modal-backdrop").onclick = closeEditModal;
+  document.getElementById("event-modal-close").onclick = closeEditModal;
+  document.getElementById("edit-ev-cancel-btn").onclick = closeEditModal;
+  document.getElementById("edit-ev-save-btn").onclick = saveEditEvent;
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) closeEditModal();
+  });
 }
 
-window.removeAttendee = (id) => {
-  selectedAttendees = selectedAttendees.filter(a => a.id !== id);
-  renderAttendeeChips();
+window.openEditEvent = (id) => {
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+
+  editEventId = id;
+  editSelectedHost = ev.host_member_id
+    ? { id: ev.host_member_id, nickname: ev.host_nickname }
+    : null;
+  editSelectedAttendees = Array.isArray(ev.attendees)
+    ? ev.attendees.map(a => ({ id: a.id, nickname: a.nickname }))
+    : [];
+
+  document.getElementById("edit-ev-title").value = ev.title || "";
+  document.getElementById("edit-ev-datetime").value = ev.event_datetime
+    ? ev.event_datetime.substring(0, 16)
+    : "";
+  document.getElementById("edit-ev-location").value = ev.location || "";
+
+  renderEditHostSelected();
+  renderEditAttendeeChips();
+
+  // 검색 바인딩 (모달 열릴 때마다 재설정)
+  setupHostSearch("edit-ev-host-input", "edit-ev-host-suggest", "edit-ev-host-selected", true);
+  setupAttendeeSearch("edit-ev-attendee-input", "edit-ev-attendee-suggest", "edit-ev-attendee-chips", true);
+
+  const modal = document.getElementById("event-edit-modal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
 };
+
+function closeEditModal() {
+  const modal = document.getElementById("event-edit-modal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  editEventId = null;
+  editSelectedHost = null;
+  editSelectedAttendees = [];
+}
+
+async function saveEditEvent() {
+  const title = document.getElementById("edit-ev-title")?.value.trim();
+  const datetime = document.getElementById("edit-ev-datetime")?.value;
+  const location = document.getElementById("edit-ev-location")?.value.trim();
+
+  if (!title) { showToast("벙제를 입력해주세요."); return; }
+
+  showLoading();
+  try {
+    const res = await fetch("/.netlify/functions/updateEvent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({
+        id: editEventId,
+        title,
+        host_member_id: editSelectedHost?.id || null,
+        event_datetime: datetime || null,
+        location: location || null,
+        attendee_ids: editSelectedAttendees.map(a => a.id)
+      })
+    });
+    if (!res.ok) throw new Error("수정에 실패했습니다.");
+    showToast("수정되었습니다 ✅");
+    closeEditModal();
+    await loadEvents();
+  } catch (e) {
+    showToast(e.message || "오류가 발생했습니다.");
+  } finally {
+    hideLoading();
+  }
+}
 
 /* =========================
    벙 등록
@@ -281,7 +432,6 @@ async function addEvent() {
     if (!res.ok) throw new Error("등록에 실패했습니다.");
     showToast("벙이 등록되었습니다 ✅");
 
-    // 폼 초기화
     document.getElementById("ev-title").value = "";
     document.getElementById("ev-datetime").value = "";
     document.getElementById("ev-location").value = "";
@@ -289,7 +439,6 @@ async function addEvent() {
     selectedAttendees = [];
     renderHostSelected();
     renderAttendeeChips();
-
     await loadEvents();
   } catch (e) {
     showToast(e.message || "오류가 발생했습니다.");
@@ -303,7 +452,6 @@ async function addEvent() {
 ========================= */
 window.deleteEvent = async (id) => {
   if (!confirm("이 벙을 삭제할까요?\n참석자 기록도 함께 삭제됩니다.")) return;
-
   showLoading();
   try {
     const res = await fetch("/.netlify/functions/deleteEvent", {
@@ -342,6 +490,10 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function iconEdit() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0 0-3L17.5 5a2.1 2.1 0 0 0-3 0L4 15.5V20zm3.2-2H6v-1.2l8.8-8.8 1.2 1.2L7.2 18z"/></svg>`;
 }
 
 function iconDelete() {
