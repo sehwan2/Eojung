@@ -1,9 +1,11 @@
 import { renderMembers } from "./members.js";
 import { renderExtensions } from "./extension.js";
 import { renderAbsences } from "./absence.js";
+import { renderEvents } from "./events.js";
 
 const pages = {
   members: renderMembers,
+  events: renderEvents,
   extension: renderExtensions,
   absence: renderAbsences
 };

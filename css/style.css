@@ -1379,3 +1379,196 @@ th.sortable .sort-arrow {
     font-size: 0.85rem;
   }
 }
+
+/* ===================================================
+   벙 관리 페이지
+=================================================== */
+
+/* 벙 추가 폼 */
+.event-form-card {
+  margin-bottom: 16px;
+}
+
+.event-form__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--gray-800, #1e293b);
+}
+
+.event-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+.event-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.event-form__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-600, #475569);
+}
+
+.event-form__input {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.event-form__input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.event-form__footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.event-form__submit {
+  padding: 8px 20px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.event-form__submit:hover {
+  background: #1d4ed8;
+}
+
+/* 멤버 검색 드롭다운 */
+.member-search-wrap {
+  position: relative;
+}
+
+/* 칩 (참석자 선택) */
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #1d4ed8;
+}
+
+.chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.chip-remove:hover {
+  color: #ef4444;
+}
+
+.selected-single {
+  margin-top: 6px;
+}
+
+/* 벙 목록 테이블 */
+.event-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.event-table th,
+.event-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.event-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.event-table .col-no        { width: 44px; text-align: center; }
+.event-table .col-ev-title  { width: 160px; }
+.event-table .col-ev-host   { width: 90px; }
+.event-table .col-ev-datetime { width: 130px; white-space: nowrap; }
+.event-table .col-ev-location { width: 100px; }
+.event-table .col-ev-attendees { width: auto; }
+.event-table .col-action    { width: 52px; text-align: center; }
+
+.event-table .col-ev-attendees {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-table .empty-row {
+  text-align: center;
+  color: #9ca3af;
+  padding: 32px;
+}
+
+/* 멤버 테이블 금월/총 컬럼 */
+.member-table .col-count {
+  width: 52px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .event-form {
+    grid-template-columns: 1fr;
+  }
+
+  .event-form__field--full {
+    grid-column: 1;
+  }
+
+  .event-table {
+    font-size: 0.82rem;
+  }
+
+  .event-table th,
+  .event-table td {
+    padding: 8px 8px;
+  }
+
+  .member-table .col-count {
+    width: 40px;
+    font-size: 0.78rem;
+  }
+}

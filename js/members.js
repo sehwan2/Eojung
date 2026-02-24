@@ -46,6 +46,8 @@ export async function renderMembers() {
               </th>
               <th class="col-chk"><input type="checkbox" id="i-black"></th>
               <th class="col-chk"><input type="checkbox" id="i-admin"></th>
+              <th class="col-count"></th>
+              <th class="col-count"></th>
               <th class="col-memo"><input id="i-memo" placeholder="메모"></th>
               <th class="col-action">
                 <button id="add-btn">등록</button>
@@ -62,6 +64,8 @@ export async function renderMembers() {
               <th class="col-status sortable" data-key="status" data-label="상태">상태</th>
               <th class="col-chk sortable" data-key="black" data-label="블랙">블랙</th>
               <th class="col-chk sortable" data-key="admin" data-label="운영진">운영진</th>
+              <th class="col-count sortable" data-key="monthly_count" data-label="금월">금월</th>
+              <th class="col-count sortable" data-key="total_count" data-label="총">총</th>
               <th class="col-memo">메모</th>
               <th class="col-action">삭제</th>
             </tr>
@@ -191,6 +195,8 @@ function renderTable(list) {
       <td class="col-status editable" data-field="status">${escapeHtml(m.status)}</td>
       <td class="col-chk editable center" data-field="black">${m.black ? iconBlackCard() : ""}</td>
       <td class="col-chk editable center" data-field="admin">${m.admin ? iconAdminUser() : ""}</td>
+      <td class="col-count center">${m.monthly_count ?? 0}</td>
+      <td class="col-count center">${m.total_count ?? 0}</td>
       <td class="col-memo editable" data-field="memo">
         <div class="memo-text">${escapeHtml(m.memo || "")}</div>
       </td>
